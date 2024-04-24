@@ -68,7 +68,7 @@ class CartoBase(object):
             ha="center", va="bottom", transform=ax.transAxes)
         # plt.suptitle(self.date.strftime("%d %b %Y, %H:%M UT"), 
         #     x=0.5, y=self.ytitlehandle, ha="center", va="bottom", fontweight="bold", fontsize=15)
-        ax.text(0.05, 0.9, "(I)", 
+        ax.text(0.05, 0.9, "(a)", 
             ha="left", va="center", transform=ax.transAxes)
         return ax
 

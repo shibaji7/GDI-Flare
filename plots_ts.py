@@ -38,33 +38,29 @@ def parse_omni():
                 "ASYH": float(line[16])
             })
     o = pd.DataFrame.from_records(o)
+    o["V"] = np.sqrt(o.Vx**2+o.Vz**2+o.Vy**2)
     return o
 
-def plot_figure1():
+def plot_fig1_supl():
     omni = parse_omni()
-    ft = FlareTS([dt.datetime(2017,9,6), dt.datetime(2017,9,7)], flare_info={})
+    dates = [dt.datetime(2017,9,6), dt.datetime(2017,9,7)]
 
-    fig = plt.figure(figsize=(8, 18), dpi=240)
-    ax = fig.add_subplot(611)
-    ft.plot_TS_from_axes(ax, xlabel="")
-    ax.text(0.1,0.9,"(II.a)",ha="left",va="center",transform=ax.transAxes, 
-            fontdict={"size":15, "fontweight": "bold"})
-    ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
-    ax.text(0.95,1.05,"Flare Class: X9.3 / 6 September 2017",ha="right",va="center",transform=ax.transAxes, 
-            fontdict={"size":15, "fontweight": "bold"})
-
-    ax = fig.add_subplot(612)
+    fig_num = 311
+    fig = plt.figure(figsize=(8, 3*3), dpi=240)
+    ax = fig.add_subplot(fig_num)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
     ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
     ax.tick_params(axis="both", labelsize=15)
     ax.plot(omni.date, omni.Bz, "ko", ms=1, ls="None")
     ax.set_ylim(-5, 5)
-    ax.set_xlim([dt.datetime(2017, 9, 6), dt.datetime(2017, 9, 7)])
+    ax.set_xlim(dates)
     ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2)
     ax.set_ylabel(r"IMF, $B_z$ (nT)", fontdict={"size":15, "fontweight": "bold", "color":"k"})
-    ax.text(0.1,0.9,"(II.b)",ha="left",va="center",transform=ax.transAxes, 
+    ax.text(0.1,0.9,"(a)",ha="left",va="center",transform=ax.transAxes, 
             fontdict={"size":15, "fontweight": "bold"})
+    ax.text(dt.datetime(2017, 9, 6, 12, 2), 6, "12.02 UT / X9.3", ha="center", va="center", 
+        fontdict={"size":15, "fontweight": "bold", "color":"r"})
     ax = ax.twinx()
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
@@ -74,16 +70,16 @@ def plot_figure1():
     ax.plot(omni.date, omni.By, "bo", ms=1, ls="None", label=r"$B_y$")
     ax.set_ylabel(r"IMF, $B_y$ (nT)", fontdict={"size":15, "fontweight": "bold", "color":"b"})
     ax.set_xticklabels([])
-    
-    ax = fig.add_subplot(613)
+
+    ax = fig.add_subplot(312)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
     ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
     ax.tick_params(axis="both", labelsize=12)
     ax.plot(omni.date, omni.Pd, "ko", ls="None", ms=0.8)
-    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
+    ax.set_xlim(dates)
     ax.set_ylabel("Proton Density (\#/cc)", fontdict={"size":15, "fontweight": "bold"})
-    ax.text(0.1,0.9,"(II.c)",ha="left",va="center",transform=ax.transAxes, 
+    ax.text(0.1,0.9,"(b)",ha="left",va="center",transform=ax.transAxes, 
             fontdict={"size":15, "fontweight": "bold"})
     ax.set_ylim(0, 12)
     ax.set_xticklabels([])
@@ -93,14 +89,50 @@ def plot_figure1():
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
     ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
     ax.tick_params(axis="both", labelsize=15)
-    ax.plot(omni.date, omni.Fd, "bo", ls="None", ms=0.8)
-    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
-    ax.set_ylabel("Dynamic pressure (nPa)", fontdict={"size":15, "fontweight": "bold", "color":"b"})
-    ax.set_ylim(0, 4)
+    ax.set_xlim(dates)
+    ax.plot(omni.date, omni.V, "bo", ls="None", ms=0.8)
+    ax.set_xlim(dates)
+    ax.set_ylabel("Velocity (km/s)", fontdict={"size":15, "fontweight": "bold", "color":"b"})
+    ax.set_ylim(0, 1000)
     ax.set_xticklabels([])
     ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
 
-    ax = fig.add_subplot(614)
+    ax = fig.add_subplot(313)
+    ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
+    ax.tick_params(axis="both", labelsize=15)
+    ax.set_xlim(dates)
+    ax.plot(omni.date, omni.Fd, "ko", ls="None", ms=0.8)
+    ax.set_xlim(dates)
+    ax.set_ylabel("Dynamic pressure (nPa)", fontdict={"size":15})
+    ax.set_ylim(0, 4)
+    ax.text(0.1,0.9,"(c)",ha="left",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+    ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
+    ax.set_xlabel("Time (UT)", fontdict={"size":15, "fontweight": "bold"})
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+
+    fig.savefig("database/OMNI.png", bbox_inches="tight")
+    return
+
+def plot_figure1():
+    plot_fig1_supl()
+    omni = parse_omni()
+    ft = FlareTS([dt.datetime(2017,9,6), dt.datetime(2017,9,7)], flare_info={})
+
+    fig_num = 411
+    fig = plt.figure(figsize=(8, 12), dpi=240)
+    ax = fig.add_subplot(fig_num)
+    ft.plot_TS_from_axes(ax, xlabel="")
+    ax.text(0.1,0.9,"(b)",ha="left",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+    ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
+    ax.text(0.95,1.05,"Flare Class: X9.3 / 6 September 2017",ha="right",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+
+    
+    ax = fig.add_subplot(fig_num+1)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
     ax.tick_params(axis="both", labelsize=15)
@@ -110,13 +142,13 @@ def plot_figure1():
     ax.legend(loc=1, fontsize=12)
     ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
     ax.set_ylabel("AE/AL/AU (nT)", fontdict={"size":15, "fontweight": "bold"})
-    ax.text(0.1,0.9,"(II.d)",ha="left",va="center",transform=ax.transAxes, 
+    ax.text(0.1,0.9,"(c)",ha="left",va="center",transform=ax.transAxes, 
             fontdict={"size":15, "fontweight": "bold"})
     ax.set_ylim(-500, 1000)
     ax.set_xticklabels([])
     ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
 
-    ax = fig.add_subplot(615)
+    ax = fig.add_subplot(fig_num+2)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
     ax.tick_params(axis="both", labelsize=15)
@@ -131,11 +163,11 @@ def plot_figure1():
     ax.set_ylim(0, 100)
     ax.set_ylabel("ASY-H (nT)", fontdict={"size":15, "fontweight": "bold", "color":"b"})
     ax.set_xlabel("Time (UT)", fontdict={"size":15, "fontweight": "bold"})
-    ax.text(0.1,0.9,"(II.e)",ha="left",va="center",transform=ax.transAxes, 
+    ax.text(0.1,0.9,"(d)",ha="left",va="center",transform=ax.transAxes, 
             fontdict={"size":15, "fontweight": "bold"})
     ax.set_xticklabels([])
     
-    ax = fig.add_subplot(616)
+    ax = fig.add_subplot(fig_num+3)
     dates=[
             dt.datetime(2017,9,6),
             dt.datetime(2017,9,7)
@@ -148,7 +180,7 @@ def plot_figure1():
     o = o[o.unique_tfreq.isin([10.5])]
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
-    ax.text(0.1,0.9,"(II.f)",ha="left",va="center",transform=ax.transAxes, 
+    ax.text(0.1,0.9,"(e)",ha="left",va="center",transform=ax.transAxes, 
             fontdict={"size":15, "fontweight": "bold"})
     rti = RTI(rad.fov, 3000, dates, "", 1)
     ax = rti.addParamPlot(
@@ -159,14 +191,14 @@ def plot_figure1():
     ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
 
-    fig.savefig("dataset/RTI.png", bbox_inches="tight")
+    fig.savefig("database/RTI.png", bbox_inches="tight")
     return
 
 def plot_figure2():
     tags = ["(a)", "(b)", "(c)"]
     dates = [
-        dt.datetime(2017,9,6),
-        dt.datetime(2017,9,7)
+        dt.datetime(2017,9,6,11),
+        dt.datetime(2017,9,6,17)
     ]
     fig = plt.figure(figsize=(8, 9), dpi=240)
     for i, rad in enumerate(["sas","pgr","kod"]):
@@ -179,19 +211,19 @@ def plot_figure2():
         o["unique_tfreq"] = o.tfreq.apply(lambda x: int(x/0.5)*0.5)
         o = o[o.unique_tfreq.isin([10.5])]
         ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
-        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
         ax.text(0.1,0.9,tags[i],ha="left",va="center",transform=ax.transAxes, 
                 fontdict={"size":15, "fontweight": "bold"})
         ax = rti.addParamPlot(
-            o, 7, "", add_gflg=True, ax=ax, p_max=300, p_min=-300
+            o, 7, "", xlabel="", add_gflg=True, ax=ax, p_max=300, p_min=-300
         )
         ax.set_ylabel("Slant Range (km)", fontdict={"size":15, "fontweight": "bold"})
         ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
-        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
     ax.set_xlabel("Time (UT)", fontdict={"size":15, "fontweight": "bold"})
-    fig.savefig("dataset/IS_RTI.png", bbox_inches="tight")
+    fig.savefig("database/IS_RTI.png", bbox_inches="tight")
     return
 
 if __name__ == "__main__":
     plot_figure1()
-    plot_figure2()
+    #plot_figure2()
