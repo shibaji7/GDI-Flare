@@ -158,7 +158,7 @@ class CartoBase(object):
         #     self.ax.add_patch(patch)
         return
     
-    def add_circle(self, lat, lon, width=5, height=5):
+    def add_circle(self, lat, lon, width=3, height=3):
         width = width / np.cos(np.deg2rad(lat))
         self.ax.add_patch(Rectangle(
             xy=[lon-width/2, lat-height/2], width=width, height=height,

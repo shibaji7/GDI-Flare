@@ -365,7 +365,9 @@ if __name__ == "__main__":
         "database/gps170830g.002.txt.gz", 
         "TXT.GZ"
     )
-    gradient_TS(dates, g, g0, clat=60, grid_lat=5, clon=-105, grid_lon=5)
+    import os
+    os.mkdir("figures/06Sep")
+    #gradient_TS(dates, g, g0, clat=60, grid_lat=5, clon=-105, grid_lon=5)
     d = dt.datetime(2017,9,6,11,47,30)
     for i in range(10):
         # g.summary(f"figures/06Sep/TEC.{d.strftime('%H-%M')}.png", d, 1)
