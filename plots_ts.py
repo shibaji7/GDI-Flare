@@ -225,5 +225,5 @@ def plot_figure2():
     return
 
 if __name__ == "__main__":
-    plot_figure1()
-    #plot_figure2()
+    #plot_figure1()
+    plot_figure2()
