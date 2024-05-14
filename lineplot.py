@@ -130,7 +130,7 @@ def plot_lines():
     ax.plot(times, Z, "ko", ms=2.5, ls="None", label=r"06 Sep")
     ax.plot(times, Z0, "ro", ms=2.5, ls="None", label=r"30 Aug")
     ax.set_ylabel(
-        "$n'_0$", 
+        "$n'_0$ [TECu]", 
         fontdict={"size":15, "fontweight": "bold"}
     )
     ax.text(0.05, 1.05, r"$\lambda,\phi=%d^\circ,%d^\circ$"%(60, -105), 
@@ -147,7 +147,7 @@ def plot_lines():
     ax.plot(times, dxZ, "ko", ms=2.5, ls="None")
     ax.plot(times, dxZ0, "ro", ms=2.5, ls="None")
     ax.set_ylabel(
-        r"$\frac{\partial n'_0}{\partial \phi}$", 
+        r"$\frac{\partial n'_0}{\partial \phi}$ [TECu/$^\circ$]", 
         fontdict={"size":15, "fontweight": "bold"}
     )
     ax.set_xlim(dates)
@@ -169,6 +169,11 @@ def plot_lines():
 
     ax = axes[2]
     v, vtop, vbot = fetch_velocity(radars, dates, times)
+    v, vtop, vbot = (
+        v/np.cos(np.cos(np.deg2rad(60))),
+        vtop/np.cos(np.cos(np.deg2rad(60))),
+        vbot/np.cos(np.cos(np.deg2rad(60)))
+    )
     #ax.plot(times, v, "ko", ms=2.5, ls="None")
     ax.errorbar(times, v, 
                 yerr=np.array([vbot.ravel(), vtop.ravel()]),
@@ -176,6 +181,11 @@ def plot_lines():
     v, vtop, vbot = fetch_velocity(radars, 
                             [dates[0]-dt.timedelta(7), dates[1]-dt.timedelta(7)],
                             times0)
+    v, vtop, vbot = (
+        v/np.cos(np.cos(np.deg2rad(60))),
+        vtop/np.cos(np.cos(np.deg2rad(60))),
+        vbot/np.cos(np.cos(np.deg2rad(60)))
+    ) 
     #ax.plot(times, v, "ro", ms=2.5, ls="None")
     ax.errorbar(times, v, yerr=np.array([vbot.ravel(), vtop.ravel()]),
                 fmt="o", ms=2.5, ls="None", color="r")
@@ -191,27 +201,37 @@ def plot_lines():
     ax = axes[3]
     eta = dxZ/Z
     v, vtop, vbot = fetch_velocity(radars, dates, times)
+    v, vtop, vbot = (
+        v/np.cos(np.cos(np.deg2rad(60))),
+        vtop/np.cos(np.cos(np.deg2rad(60))),
+        vbot/np.cos(np.cos(np.deg2rad(60)))
+    )
     ax.errorbar(times, np.abs(v)*eta, yerr=np.array([np.abs(vbot.ravel())*eta*.5, 0.5*np.abs(vtop.ravel())*eta]),
                 fmt="o", ms=2.5, ls="None", color="k")
     #ax.plot(times, abs(v)*, "ko", ms=2.5, ls="None")
     v, vtop, vbot = fetch_velocity(radars, 
                             [dates[0]-dt.timedelta(7), dates[1]-dt.timedelta(7)],
                             times0)
+    v, vtop, vbot = (
+        v/np.cos(np.cos(np.deg2rad(60))),
+        vtop/np.cos(np.cos(np.deg2rad(60))),
+        vbot/np.cos(np.cos(np.deg2rad(60)))
+    )
     eta = dxZ0/Z0
     ax.errorbar(times, np.abs(v)*eta, yerr=np.array([np.abs(vbot.ravel())*eta*.5, 0.5*np.abs(vtop.ravel())*eta]),
                 fmt="o", ms=2.5, ls="None", color="r")
     ax.set_ylabel(
-        r"$\gamma'$", 
+        r"$\gamma'$ [/s]", 
         fontdict={"size":15, "fontweight": "bold"}
     )
     ax.set_xlim(dates)
     ax.axvspan(dates[0], times[zaI], color="gray", alpha=0.4)
-    ax.set_ylim(-10, 100)
+    ax.set_ylim(-10, 120)
 
     fig.subplots_adjust(hspace=0.2, wspace=0.2)
     fig.savefig(f"figures/TS.png", bbox_inches="tight")
     return
 
 import os
-os.mkdir("figures/")
+#os.mkdir("figures/")
 plot_lines()
