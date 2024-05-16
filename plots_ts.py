@@ -201,6 +201,7 @@ def plot_figure2():
         dt.datetime(2017,9,6,17)
     ]
     fig = plt.figure(figsize=(8, 9), dpi=240)
+    beams = [7, 7, 10]
     for i, rad in enumerate(["sas","pgr","kod"]):
         ax = fig.add_subplot(311+i)
         rad = Radar(rad, dates)
@@ -215,7 +216,7 @@ def plot_figure2():
         ax.text(0.1,0.9,tags[i],ha="left",va="center",transform=ax.transAxes, 
                 fontdict={"size":15, "fontweight": "bold"})
         ax = rti.addParamPlot(
-            o, 7, "", xlabel="", add_gflg=True, ax=ax, p_max=300, p_min=-300
+            o, beams[i], "", xlabel="", add_gflg=True, ax=ax, p_max=300, p_min=-300
         )
         ax.set_ylabel("Slant Range (km)", fontdict={"size":15, "fontweight": "bold"})
         ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="r", ls="-", lw=1.2, label="12:02 UT")
