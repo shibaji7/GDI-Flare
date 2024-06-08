@@ -83,10 +83,10 @@ def fetch_velocity(radars, dates, times, gdlat_lim=[57.5, 62.5], glong_lim=[-107
         v.append(m)
         vtop.append(np.quantile(o.v, qu)-m)
         vbot.append(m-np.quantile(o.v, ql))
-        print((np.quantile(o.v, qu)+np.quantile(o.v, ql))/2, np.quantile(o.v, qu), np.quantile(o.v, ql))
+        #print((np.quantile(o.v, qu)+np.quantile(o.v, ql))/2, np.quantile(o.v, qu), np.quantile(o.v, ql))
     o = pd.DataFrame()
     o["mid"], o["top"], o["bot"] = v, vtop, vbot
-    return np.array(v), np.array(vtop), np.array(vbot)
+    return np.abs(v), np.array(vtop), np.array(vbot)
 
 def plot_lines():
     g1 = GPS1X1(
@@ -167,13 +167,15 @@ def plot_lines():
     # ax.set_ylim(0, 0.5)
     # ax.set_xticks([])
 
+    deg = 85
     ax = axes[2]
     v, vtop, vbot = fetch_velocity(radars, dates, times)
     v, vtop, vbot = (
-        v/np.cos(np.cos(np.deg2rad(60))),
-        vtop/np.cos(np.cos(np.deg2rad(60))),
-        vbot/np.cos(np.cos(np.deg2rad(60)))
+        v/np.cos(np.cos(np.deg2rad(deg))),
+        vtop/np.cos(np.cos(np.deg2rad(deg))),
+        vbot/np.cos(np.cos(np.deg2rad(deg)))
     )
+    print(v.tolist())
     #ax.plot(times, v, "ko", ms=2.5, ls="None")
     ax.errorbar(times, v, 
                 yerr=np.array([vbot.ravel(), vtop.ravel()]),
@@ -182,10 +184,11 @@ def plot_lines():
                             [dates[0]-dt.timedelta(7), dates[1]-dt.timedelta(7)],
                             times0)
     v, vtop, vbot = (
-        v/np.cos(np.cos(np.deg2rad(60))),
-        vtop/np.cos(np.cos(np.deg2rad(60))),
-        vbot/np.cos(np.cos(np.deg2rad(60)))
+        v/np.cos(np.cos(np.deg2rad(deg))),
+        vtop/np.cos(np.cos(np.deg2rad(deg))),
+        vbot/np.cos(np.cos(np.deg2rad(deg)))
     ) 
+    print(v.tolist())
     #ax.plot(times, v, "ro", ms=2.5, ls="None")
     ax.errorbar(times, v, yerr=np.array([vbot.ravel(), vtop.ravel()]),
                 fmt="o", ms=2.5, ls="None", color="r")
@@ -195,16 +198,16 @@ def plot_lines():
     )
     ax.axvspan(dates[0], times[zaI], color="gray", alpha=0.4)
     ax.set_xlim(dates)
-    ax.set_ylim(-500, 500)
+    #ax.set_ylim(-500, 500)
     ax.set_xticks([])
 
     ax = axes[3]
     eta = dxZ/Z
     v, vtop, vbot = fetch_velocity(radars, dates, times)
     v, vtop, vbot = (
-        v/np.cos(np.cos(np.deg2rad(60))),
-        vtop/np.cos(np.cos(np.deg2rad(60))),
-        vbot/np.cos(np.cos(np.deg2rad(60)))
+        v/np.cos(np.cos(np.deg2rad(deg))),
+        vtop/np.cos(np.cos(np.deg2rad(deg))),
+        vbot/np.cos(np.cos(np.deg2rad(deg)))
     )
     ax.errorbar(times, np.abs(v)*eta, yerr=np.array([np.abs(vbot.ravel())*eta*.5, 0.5*np.abs(vtop.ravel())*eta]),
                 fmt="o", ms=2.5, ls="None", color="k")
@@ -213,9 +216,9 @@ def plot_lines():
                             [dates[0]-dt.timedelta(7), dates[1]-dt.timedelta(7)],
                             times0)
     v, vtop, vbot = (
-        v/np.cos(np.cos(np.deg2rad(60))),
-        vtop/np.cos(np.cos(np.deg2rad(60))),
-        vbot/np.cos(np.cos(np.deg2rad(60)))
+        v/np.cos(np.cos(np.deg2rad(deg))),
+        vtop/np.cos(np.cos(np.deg2rad(deg))),
+        vbot/np.cos(np.cos(np.deg2rad(deg)))
     )
     eta = dxZ0/Z0
     ax.errorbar(times, np.abs(v)*eta, yerr=np.array([np.abs(vbot.ravel())*eta*.5, 0.5*np.abs(vtop.ravel())*eta]),
