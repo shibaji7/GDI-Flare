@@ -120,6 +120,28 @@ class SolarDataset(object):
                     "ar_noaanum",
                 ]
         return
+    
+class Eiscat(object):
+    
+    def __init__(self, dates, files = ["database/MAD6301_2017-09-06_bella_60@vhf.nc"]):
+        import xarray as xr
+        self.dates = dates
+        self.dataset = xr.open_dataset(files[0])
+        self._unwrap_()
+        return
+    
+    def _unwrap_(self):
+        self.dates = [
+            dt.datetime.fromtimestamp(s,tz=dt.UTC)
+            for s in self.dataset["timestamps"].values
+        ]
+        self.range = self.dataset["range"].values
+        self.azm = self.dataset["azm"].values
+        self.elm = self.dataset["elm"].values
+        self.tfreq = self.dataset["tfreq"].values
+        self.pop = self.dataset["pop"].values
+        self.height = self.range / np.cos(np.deg2rad(self.range))
+        return
 
 class Radar(object):
 
@@ -246,19 +268,27 @@ class Radar(object):
         k = 2*np.pi*f/C.c
         self.df["tau_l"] = 1.e3/(k*w_l)
         return
+        
+    def load_VHF_file(self):
+        file_names = [
+            "database/MAD6301_2017-09-06_bella_60@vhf (1).nc"
+        ]
+        import xarray as xr
+        return
 
 if __name__ == "__main__":
     dates = [
         dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
-    Radar("sas", dates)
-    Radar("kod", dates)
-    Radar("pgr", dates)
-    SolarDataset(dates)
-    dates = [
-        dt.datetime(2017,8,30), dt.datetime(2017,8,31)
-    ]
-    Radar("sas", dates)
-    Radar("kod", dates)
-    Radar("pgr", dates)
-    SolarDataset(dates)
+    Eiscat(dates)
+    # Radar("sas", dates)
+    # Radar("kod", dates)
+    # Radar("pgr", dates)
+    # SolarDataset(dates)
+    # dates = [
+    #     dt.datetime(2017,8,30), dt.datetime(2017,8,31)
+    # ]
+    # Radar("sas", dates)
+    # Radar("kod", dates)
+    # Radar("pgr", dates)
+    # SolarDataset(dates)
