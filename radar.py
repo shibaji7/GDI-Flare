@@ -6,6 +6,7 @@ import bz2
 from loguru import logger
 import datetime as dt
 import numpy as np
+import tqdm
 from scipy import constants as C
 
 class Radar(object):
@@ -16,6 +17,7 @@ class Radar(object):
         self.dates = dates
         self.clean = clean
         self.type = type
+        tqdm.tqdm_pandas()
         self.__setup__()
         self.__fetch_data__()
         self.calculate_decay_rate()
@@ -128,12 +130,12 @@ class Radar(object):
 if __name__ == "__main__":
     rads = ["sas", "kod", "pgr"]
     dates = [
-        dt.datetime(2017,9,6),
-        dt.datetime(2017,9,7),
+        dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
-    # dates = [
-    #     dt.datetime(2017,8,30),
-    #     dt.datetime(2017,8,31)
-    # ]
+    for rad in rads:
+        Radar(rad, dates)
+    dates = [
+        dt.datetime(2017,8,30), dt.datetime(2017,8,31)
+    ]
     for rad in rads:
         Radar(rad, dates)
