@@ -133,6 +133,14 @@ class Radar(object):
         self.__setup__()
         self.__fetch_data__()
         self.calculate_decay_rate()
+        fname = f"dataset/{self.dates[0].strftime('%Y%m%d')}.{self.rad}.{self.type}.csv"
+        self.df[
+            [
+                "v", "slist", "bmnum", "w_l",
+                "elv", "phi0", "time", "tfreq",
+                "scan", "gdlat", "glong", "sza"
+            ]
+        ].to_csv(fname, float_format="%g", index=False, header=True)
         return
     
     def __setup__(self):
