@@ -13,6 +13,8 @@ from sunpy import timeseries as ts
 from sunpy.net import Fido
 from sunpy.net import attrs as a
 
+from plots import create_eiscat_line_plots
+
 os.environ["OMNIDATA_PATH"] = "/home/shibaji/omni/"
 
 class SolarDataset(object):
@@ -99,16 +101,18 @@ class SolarDataset(object):
             logger.info(f"Fetching GOES ...")
             tmpfiles = Fido.fetch(result, progress=False)
             for tf in tmpfiles:
-                self.goes.append(ts.TimeSeries(tf))
-                self.dfs["goes"] = pd.concat(
-                    [self.dfs["goes"], self.goes[-1].to_dataframe()]
-                )
-            self.dfs["goes"].index.name = "time"
-            self.dfs["goes"] = self.dfs["goes"].reset_index()
-            self.dfs["goes"] = self.dfs["goes"][
-                (self.dfs["goes"].time >= self.dates[0])
-                & (self.dfs["goes"].time <= self.dates[1])
-            ]
+                if "avg1m" in tf:
+                    self.goes.append(ts.TimeSeries(tf))
+                    self.dfs["goes"] = pd.concat(
+                        [self.dfs["goes"], self.goes[-1].to_dataframe()]
+                    )
+            if len(self.dfs["goes"]) > 0:
+                self.dfs["goes"].index.name = "time"
+                self.dfs["goes"] = self.dfs["goes"].reset_index()
+                self.dfs["goes"] = self.dfs["goes"][
+                    (self.dfs["goes"].time >= self.dates[0])
+                    & (self.dfs["goes"].time <= self.dates[1])
+                ]
             # Retrieve HEKTable from the Fido result and then load
             hek_results = result["hek"]
             if len(hek_results) > 0:
@@ -119,29 +123,87 @@ class SolarDataset(object):
                     "fl_goescls",
                     "ar_noaanum",
                 ]
+        self.dfs["goes"].drop_duplicates(subset="time", inplace=True)
         return
     
 class Eiscat(object):
     
-    def __init__(self, dates, files = ["database/MAD6301_2017-09-06_bella_60@vhf.nc"]):
-        import xarray as xr
+    def __init__(
+        self, dates, 
+        from_file = "database/MAD6301_2017-09-06_bella_60@vhf.txt",
+        to_file = "dataset/MAD6301_2017-09-06_bella_60@vhf.txt"
+    ):
         self.dates = dates
-        self.dataset = xr.open_dataset(files[0])
-        self._unwrap_()
+        if not os.path.exists(to_file):
+            records = []
+            with open(from_file, "r") as f:
+                lines = f.readlines()
+                header = list(filter(None, lines[0].replace("\n", "").split(" ")))
+                for line in lines[1:]:
+                    records.append(
+                        dict(
+                            zip(
+                                header, 
+                                [   
+                                    float(x)
+                                    for x in list(filter(None, line.replace("\n", "").split(" ")))
+                                ]
+                            )
+                        )
+                    )
+            self.records = pd.DataFrame.from_records(records)
+            self.records["DATE"] = self.records.UT1_UNIX.apply(
+                lambda x: dt.datetime.fromtimestamp(x,tz=dt.UTC)
+            )
+            self.records["HEIGHT"] = np.int8( 
+                self.records["RANGE"] * np.sin(np.deg2rad(30.))
+            )
+            self.records.to_csv(
+                to_file, float_format="%g", 
+                header=True, index=False
+            )
+        else:
+            self.records = pd.read_csv(to_file, parse_dates=["DATE"])
+
+        self.records.DATE = self.records.DATE.apply(
+            lambda x: x.replace(second=0, minute=5*int(x.minute/5))
+        )
+        print(self.records.DATE.unique())
+        create_eiscat_line_plots(self, "eiscat.png")
         return
     
-    def _unwrap_(self):
-        self.dates = [
-            dt.datetime.fromtimestamp(s,tz=dt.UTC)
-            for s in self.dataset["timestamps"].values
+    def _get_at_specifif_height_(self, ax, h=100, color="g", ms=0.6, multiplier=1e-9):
+        o = self.records[
+            (self.records.HEIGHT == 10.*int(h/10))
         ]
-        self.range = self.dataset["range"].values
-        self.azm = self.dataset["azm"].values
-        self.elm = self.dataset["elm"].values
-        self.tfreq = self.dataset["tfreq"].values
-        self.pop = self.dataset["pop"].values
-        self.height = self.range / np.cos(np.deg2rad(self.range))
-        return
+        o.drop_duplicates(subset="DATE", keep="last", inplace=True,)
+        o = o[o.POP>=0]
+        o.set_index("DATE",inplace=True)
+        f = o.reindex(
+            pd.date_range(
+                start=o.index.min(),
+                end=o.index.max(),
+                freq="40s"
+            )
+        ).interpolate(method="cubic")
+        o.reset_index(inplace=True)
+        f.index.name = "DATE"
+        f.reset_index(inplace=True)
+        mul = "{%d}"%int(np.log10(multiplier))
+        df = f[
+            f.DATE == dt.datetime(2017,9,6,12,1,20,tzinfo=dt.timezone.utc)
+        ]
+        pcnt, absolute = (
+            np.round((df.POP.tolist()[0]-f.POP.tolist()[0])/f.POP.tolist()[0], 2),
+            np.round((df.POP.tolist()[0]-f.POP.tolist()[0]), 2)
+        )
+        print(pcnt, absolute*1e-10)
+        ax.plot(
+            f.DATE, f.POP*multiplier, marker=".", 
+            color=color, ls="None", ms=ms,
+            label=fr"$h={h}$ km, ($\times 10^{mul}$) []"
+        )
+        return f
 
 class Radar(object):
 
