@@ -1,7 +1,7 @@
 import datetime as dt
 import sys
 sys.path.append("py")
-from fetch import SolarDataset
+from fetch import SolarDataset, Radar
 
 def compare_quiet_versus_event_day():
     import matplotlib.dates as mdates
@@ -140,5 +140,16 @@ def compare_quiet_versus_event_day():
     fig.savefig("figures/compare_days.png", bbox_inches="tight")
     return
 
+def create_RTI_figure():
+    dates = [dt.datetime(2017,9,6), dt.datetime(2017,9,7)]
+    rads = ["sas", "pgr", "kod"]
+    radars = {}
+    for rad in rads:
+        radars[rad] = Radar(rad, dates)
+    from plots import plot_figure2
+    plot_figure2(radars, dates, rads)
+    return
+
 if __name__ == "__main__":
-    compare_quiet_versus_event_day()
+    create_RTI_figure()
+    # compare_quiet_versus_event_day()
