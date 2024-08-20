@@ -1,7 +1,7 @@
 import datetime as dt
 import sys
 sys.path.append("py")
-from fetch import SolarDataset, Radar
+from fetch import SolarDataset, Radar, GPS1deg
 
 def compare_quiet_versus_event_day():
     import matplotlib.dates as mdates
@@ -149,7 +149,20 @@ def create_RTI_figure():
     from plots import plot_figure2
     plot_figure2(radars, dates, rads)
     return
+    
+def create_GPS_error_list():
+    dates = [
+        dt.datetime(2017,9,6),
+        dt.datetime(2017,9,7)
+    ]
+    # dates = [
+    #     dt.datetime(2017,8,30),
+    #     dt.datetime(2017,8,31)
+    # ]
+    GPS1deg(dates)
+    return
 
 if __name__ == "__main__":
-    create_RTI_figure()
+    create_GPS_error_list()
+    # create_RTI_figure()
     # compare_quiet_versus_event_day()

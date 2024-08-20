@@ -44,7 +44,7 @@ class RangeTimePlot(object):
     
     def addParamPlot(self, df, beam, title, p_max=100, p_min=-100, xlabel="Time (UT)",
              ylabel="Range gate", zparam="v", label="Velocity (m/s)", add_gflg=False, sza_th=108,
-             cmap = plt.cm.jet_r, ax=None):
+             cmap = plt.cm.jet_r, ax=None, overlay_sza=True):
         ax = ax if ax else self._add_axis()
         df = df[df.bmnum==beam]
         X, Y, Z = get_gridded_parameters(df, xparam="time", yparam="slist", zparam=zparam)
@@ -71,8 +71,11 @@ class RangeTimePlot(object):
             im = ax.pcolormesh(X, Y, Z.T, lw=0.01, edgecolors="None", cmap=cmap,
                         vmax=p_max, vmin=p_min, shading="nearest")
         self._add_colorbar(im, ax, cmap, label=label)
-        self.overlay_sza(ax, df.time.unique(), beam, [0, np.max(df.gate)], 
-                df.rsep.iloc[0], df.frang.iloc[0], sza_th)
+        if overlay_sza:
+            self.overlay_sza(
+                ax, df.time.unique(), beam, [0, np.max(df.gate)], 
+                df.rsep.iloc[0], df.frang.iloc[0], sza_th
+            )
         return ax
 
     def overlay_sza(self, ax, times, beam, gate_range, rsep, frang, th=108):

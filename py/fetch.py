@@ -8,12 +8,13 @@ import datetime as dt
 import numpy as np
 from tqdm import tqdm
 from scipy import constants as C
+import xarray as xr
 
 from sunpy import timeseries as ts
 from sunpy.net import Fido
 from sunpy.net import attrs as a
 
-from plots import create_eiscat_line_plots
+from plots import create_eiscat_line_plot
 
 os.environ["OMNIDATA_PATH"] = "/home/shibaji/omni/"
 
@@ -126,50 +127,150 @@ class SolarDataset(object):
         self.dfs["goes"].drop_duplicates(subset="time", inplace=True)
         return
     
+class GPS1deg(object):
+
+    def __init__(
+        self, dates,
+    ):
+        import glob
+        import xarray as xr
+        self.dates = dates
+        file = glob.glob(
+            f"database/*{self.dates[0].strftime('%m%d')}*.nc"
+        )[0]
+        logger.info(f"GPS file: {file}")
+        self.ds = xr.open_dataset(file)
+        self.load_dataset()
+        self.check_dataset_errorspan()
+        return
+    
+    def load_dataset(self):
+        self.ddates = [
+            dt.datetime.fromtimestamp(s)
+            for s in self.ds["timestamps"].values
+        ]
+        self.lats = self.ds["gdlat"].values.tolist()
+        self.lons = self.ds["glon"].values.tolist()
+        return
+    
+    def check_dataset_errorspan(self):
+        import plots
+        date_range = [
+            self.dates[0].replace(hour=11), 
+            self.dates[1].replace(day=self.dates[0].day, hour=13)
+        ]
+        lat_range, lon_range = (
+            [30, 60],
+            [-80, -120]
+        )
+        time_index_range = [
+            self.ddates.index(date_range[0]),
+            self.ddates.index(date_range[1])
+        ]
+        lat_index_range = [
+            self.lats.index(lat_range[0]),
+            self.lats.index(lat_range[1])
+        ]
+        lon_index_range = [
+            self.lons.index(lon_range[0]),
+            self.lons.index(lon_range[1])
+        ]
+        dtec_3D_chunck = self.ds["dtec"].values[
+            time_index_range[0]:time_index_range[1],
+            lat_index_range[0]:lat_index_range[1],
+            lon_index_range[1]:lon_index_range[0],
+        ]
+        tec_3D_chunck = self.ds["tec"].values[
+            time_index_range[0]:time_index_range[1],
+            lat_index_range[0]:lat_index_range[1],
+            lon_index_range[1]:lon_index_range[0],
+        ]
+        logger.info(f"Logging dTEC, error, {np.nanmax(dtec_3D_chunck)}/{np.nanmin(dtec_3D_chunck)}")
+        txt = f"{date_range[0].strftime('%H')}-{date_range[1].strftime('%H')}, {date_range[0].strftime('%d %b %Y UT ')}/ " +\
+            fr"$\theta$=[{lat_range[0]}$^\circ$,{lat_range[1]}$^\circ$] / " +\
+            fr"$\phi$=[{lon_range[0]}$^\circ$,{lon_range[1]}$^\circ$]"
+        plots.create_dtec_error_distribution(
+            dtec_3D_chunck.ravel(), 
+            (100.*dtec_3D_chunck/tec_3D_chunck).ravel(),
+            txt
+        )
+        return
+
 class Eiscat(object):
     
     def __init__(
         self, dates, 
-        from_file = "database/MAD6301_2017-09-06_bella_60@vhf.txt",
+        from_file = "database/MAD6400_2017-09-06_bella_60@vhf.nc",
         to_file = "dataset/MAD6301_2017-09-06_bella_60@vhf.txt"
     ):
         self.dates = dates
-        if not os.path.exists(to_file):
-            records = []
-            with open(from_file, "r") as f:
-                lines = f.readlines()
-                header = list(filter(None, lines[0].replace("\n", "").split(" ")))
-                for line in lines[1:]:
-                    records.append(
-                        dict(
-                            zip(
-                                header, 
-                                [   
-                                    float(x)
-                                    for x in list(filter(None, line.replace("\n", "").split(" ")))
-                                ]
-                            )
-                        )
-                    )
-            self.records = pd.DataFrame.from_records(records)
-            self.records["DATE"] = self.records.UT1_UNIX.apply(
-                lambda x: dt.datetime.fromtimestamp(x,tz=dt.UTC)
+        # Only load these parameters along with time
+        keys = [
+            "gdalt", "ne", 
+            # "ti", "tr", "co", "vo", "po+",
+            # "dne", "dtr", "dco", "dvo", "dpo+",
+        ]
+        ds = xr.open_dataset(from_file, engine="h5netcdf")
+        # Initalize all the parameters
+        yf = dict(zip([None]*len(keys), keys))
+        for k in keys:
+            yf[k] = list()
+        yf["time"] = list()
+        # Load these parameters
+        L = len(ds["range"].values) # Range
+        for i, s in enumerate(ds["timestamps"].values):
+            t = dt.datetime.fromtimestamp(s)
+            for _, k in enumerate(keys):
+                yf[k].extend(ds[k].values[i, :].tolist())
+            yf["time"].extend([t] * L)
+        # print(len(yf["time"]), len(yf["gdalt"]) , len(yf["ne"]))
+        self.yf = pd.DataFrame.from_dict(yf)
+        self.yf.time = self.yf.time.apply(
+            lambda x: x.replace(
+                minute=5*int(x.minute/5),
+                second=0, microsecond=0
             )
-            self.records["HEIGHT"] = np.int8( 
-                self.records["RANGE"] * np.sin(np.deg2rad(30.))
-            )
-            self.records.to_csv(
-                to_file, float_format="%g", 
-                header=True, index=False
-            )
-        else:
-            self.records = pd.read_csv(to_file, parse_dates=["DATE"])
-
-        self.records.DATE = self.records.DATE.apply(
-            lambda x: x.replace(second=0, minute=5*int(x.minute/5))
         )
-        print(self.records.DATE.unique())
-        create_eiscat_line_plots(self, "eiscat.png")
+        self.yf.dropna(inplace=True)
+        # print(yf.head())
+        # print(ds["gdalt"],ds["ne"] )
+        # print(list(ds.keys()))
+        # if not os.path.exists(to_file):
+        #     records = []
+        #     with open(from_file, "r") as f:
+        #         lines = f.readlines()
+        #         header = list(filter(None, lines[0].replace("\n", "").split(" ")))
+        #         for line in lines[1:]:
+        #             records.append(
+        #                 dict(
+        #                     zip(
+        #                         header, 
+        #                         [   
+        #                             float(x)
+        #                             for x in list(filter(None, line.replace("\n", "").split(" ")))
+        #                         ]
+        #                     )
+        #                 )
+        #             )
+        #     self.records = pd.DataFrame.from_records(records)
+        #     self.records["DATE"] = self.records.UT1_UNIX.apply(
+        #         lambda x: dt.datetime.fromtimestamp(x,tz=dt.UTC)
+        #     )
+        #     self.records["HEIGHT"] = np.int8( 
+        #         self.records["RANGE"] * np.sin(np.deg2rad(30.))
+        #     )
+        #     self.records.to_csv(
+        #         to_file, float_format="%g", 
+        #         header=True, index=False
+        #     )
+        # else:
+        #     self.records = pd.read_csv(to_file, parse_dates=["DATE"])
+
+        # self.records.DATE = self.records.DATE.apply(
+        #     lambda x: x.replace(second=0, minute=5*int(x.minute/5))
+        # )
+        # print(self.records.DATE.unique())
+        create_eiscat_line_plot(self, "eiscat.png")
         return
     
     def _get_at_specifif_height_(self, ax, h=100, color="g", ms=0.6, multiplier=1e-9):
@@ -342,7 +443,8 @@ if __name__ == "__main__":
     dates = [
         dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
-    Eiscat(dates)
+    # GPS1deg(dates)
+    # Eiscat(dates)
     # Radar("sas", dates)
     # Radar("kod", dates)
     # Radar("pgr", dates)
