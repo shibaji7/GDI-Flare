@@ -155,10 +155,10 @@ def create_GPS_error_list():
         dt.datetime(2017,9,6),
         dt.datetime(2017,9,7)
     ]
-    # dates = [
-    #     dt.datetime(2017,8,30),
-    #     dt.datetime(2017,8,31)
-    # ]
+    dates = [
+        dt.datetime(2017,8,30),
+        dt.datetime(2017,8,31)
+    ]
     GPS1deg(dates)
     return
 
