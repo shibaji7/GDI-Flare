@@ -7,7 +7,7 @@ import matplotlib.dates as mdates
 from matplotlib.dates import DateFormatter
 import datetime as dt
 
-def create_dtec_error_distribution(dtec, ptec, txt):
+def create_dtec_error_distribution(dtec, ptec, txt, fname="gps.dtec_error_dist.png"):
     setsize(10)
     fig = plt.figure(figsize=(8, 4), dpi=300)
     ax = fig.add_subplot(121)
@@ -33,7 +33,7 @@ def create_dtec_error_distribution(dtec, ptec, txt):
     ax.set_yscale("log")
     ax.set_xlim(0, 50)
     ax.set_ylim(1, 1e4)
-    fig.savefig(f"figures/gps.dtec_error_dist.png", bbox_inches="tight")
+    fig.savefig(f"figures/{fname}", bbox_inches="tight")
     return
 
 def create_eiscat_line_plot(eiscat, fname, size=10):

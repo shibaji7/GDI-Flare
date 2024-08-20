@@ -192,7 +192,7 @@ class GPS1deg(object):
         plots.create_dtec_error_distribution(
             dtec_3D_chunck.ravel(), 
             (100.*dtec_3D_chunck/tec_3D_chunck).ravel(),
-            txt
+            txt, fname=f"gps.dtec_error_dist_{self.dates[0].strftime('%d')}.png"
         )
         return
 
