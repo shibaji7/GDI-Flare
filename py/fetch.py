@@ -244,18 +244,15 @@ class Eiscat(object):
             (o.Time >= dt.datetime(2017,9,6,12,1,))
             & (o.Time <= dt.datetime(2017,9,6,12,3))
         ]
-        print(df)
         pcnt, absolute = (
             np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0])/o.Ne.tolist()[0], 2),
             np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0]), 2)
         )
-        print(pcnt, absolute*1e-9)
         ax.plot(
             o.Time, o.Ne*multiplier, marker=".",
             color=color, ls="None", ms=ms,
             label=fr"$h={h}$ km, " + r"[$\theta_{N_e}$=%.1f, $\delta_{N_e}$=%.1f$\times 10^{9}$]"%(pcnt, absolute*1e-9)
         )
-        o.to_csv(f"x{h}.csv", index=False)
         return
 
 class Radar(object):
