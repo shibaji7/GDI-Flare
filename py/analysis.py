@@ -166,49 +166,47 @@ def create_GPS_error_list():
     GPS1deg(dates)
     return
 
-def create_elev_angle_analysis(rad="sas", tdiff=None):
+def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
     import plots
     import matplotlib.pyplot as plt
     
-    R = 6371.
+    
     plots.setsize(12)
     dates = [dt.datetime(2017,9,6,11), dt.datetime(2017,9,6,17)]
     radar = Radar(rad, dates)
-    tdiff = tdiff if tdiff is None else tdiff*1e-9
-    radar.recalculate_elv_angle(tdiff=tdiff)
-    radar.df["gate"] = np.copy(radar.df.slist)
-    radar.df.slist = (radar.df.slist*radar.df.rsep) + radar.df.frang 
-    radar.df["vheight"] = (
-        (
-            R**2 + radar.df.slist**2 + (
-                2*radar.df.slist*R*np.sin(np.deg2rad(radar.df.elv))
-            )
-        )**0.5 - 
-        R
-    )
+    radar.recalculate_elv_angle(tdiff=tdiff)    
     radar.df["unique_tfreq"] = radar.df.tfreq.apply(lambda x: int(x/0.5)*0.5)
     radar.df = radar.df[radar.df.unique_tfreq.isin([10.5])]   
-    rti = RangeTimePlot(3000, dates, "", 2)
+    rti = RangeTimePlot(3000, dates, "", 4)
     ax = rti.addParamPlot(
-        radar.df, 7, "", p_max=45, p_min=0, xlabel="", add_gflg=True,
+        radar.df, beam, "", p_max=45, p_min=0, xlabel="", add_gflg=False,
         ylabel="Range gate", zparam="elv", label="Elevation (deg)",
         overlay_sza=False
     )
-    ax.text(0.01, 1.05, rad.upper() + " / 7", ha="left", va="center", transform=ax.transAxes)
+    ax.text(0.01, 1.05, f"{rad.upper()} / {beam}", ha="left", va="center", transform=ax.transAxes)
     rti.addParamPlot(
-        radar.df, 7, "", p_max=1000, p_min=0, xlabel="Time (UT)", add_gflg=True,
-        ylabel="Range gate", zparam="vheight", label=r"$V_h$ [2-Parm Model] (km)",
+        radar.df, beam, "", p_max=1000, p_min=0, xlabel="", add_gflg=False,
+        ylabel="Range gate", zparam="vheight_2p", label=r"$V_h$ [2-Parm Model] (km)",
         overlay_sza=False, cmap = plt.cm.Spectral_r
+    )
+    rti.addParamPlot(
+        radar.df, beam, "", p_max=1000, p_min=0, xlabel="", add_gflg=False,
+        ylabel="Range gate", zparam="vheight_Ch", label=r"$V_h$ [Chisham Model] (km)",
+        overlay_sza=False, cmap = plt.cm.Spectral_r, 
+    )
+    rti.addParamPlot(
+        radar.df, beam, "", p_max=100, p_min=0, xlabel="Time (UT)", add_gflg=False,
+        ylabel="Range gate", zparam="tau_l", label=r"$\tau_l$",
+        overlay_sza=False, cmap = plt.cm.jet, 
     )
     rti.save(f"figures/height_analysis.{rad}.png")
     rti.close()
     return
 
 if __name__ == "__main__":
-    for rad, tdiff in zip(["sas", "pgr", "kod"], [10, 5, 10]):
-        create_elev_angle_analysis(rad, tdiff)
+    for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 10], [7, 7, 10]):
+        create_elev_angle_analysis(rad, tdiff*1e-3, b)
         
-    
     # create_GPS_error_list()
     # create_RTI_figure()
     # compare_quiet_versus_event_day()

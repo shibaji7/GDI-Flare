@@ -15,6 +15,7 @@ from sunpy.net import Fido
 from sunpy.net import attrs as a
 
 from plots import create_eiscat_line_plot
+import utils
 
 os.environ["OMNIDATA_PATH"] = "/home/shibaji/omni/"
 
@@ -201,111 +202,61 @@ class Eiscat(object):
     
     def __init__(
         self, dates, 
-        from_file = "database/MAD6400_2017-09-06_bella_60@vhf.nc",
+        from_file = "database/PP_6Sep17.mat",
         to_file = "dataset/MAD6301_2017-09-06_bella_60@vhf.txt"
     ):
-        self.dates = dates
-        # Only load these parameters along with time
-        keys = [
-            "gdalt", "ne", 
-            # "ti", "tr", "co", "vo", "po+",
-            # "dne", "dtr", "dco", "dvo", "dpo+",
-        ]
-        ds = xr.open_dataset(from_file, engine="h5netcdf")
-        # Initalize all the parameters
-        yf = dict(zip([None]*len(keys), keys))
-        for k in keys:
-            yf[k] = list()
-        yf["time"] = list()
-        # Load these parameters
-        L = len(ds["range"].values) # Range
-        for i, s in enumerate(ds["timestamps"].values):
-            t = dt.datetime.fromtimestamp(s)
-            for _, k in enumerate(keys):
-                yf[k].extend(ds[k].values[i, :].tolist())
-            yf["time"].extend([t] * L)
-        # print(len(yf["time"]), len(yf["gdalt"]) , len(yf["ne"]))
-        self.yf = pd.DataFrame.from_dict(yf)
-        self.yf.time = self.yf.time.apply(
-            lambda x: x.replace(
-                minute=5*int(x.minute/5),
-                second=0, microsecond=0
-            )
-        )
-        self.yf.dropna(inplace=True)
-        # print(yf.head())
-        # print(ds["gdalt"],ds["ne"] )
-        # print(list(ds.keys()))
-        # if not os.path.exists(to_file):
-        #     records = []
-        #     with open(from_file, "r") as f:
-        #         lines = f.readlines()
-        #         header = list(filter(None, lines[0].replace("\n", "").split(" ")))
-        #         for line in lines[1:]:
-        #             records.append(
-        #                 dict(
-        #                     zip(
-        #                         header, 
-        #                         [   
-        #                             float(x)
-        #                             for x in list(filter(None, line.replace("\n", "").split(" ")))
-        #                         ]
-        #                     )
-        #                 )
-        #             )
-        #     self.records = pd.DataFrame.from_records(records)
-        #     self.records["DATE"] = self.records.UT1_UNIX.apply(
-        #         lambda x: dt.datetime.fromtimestamp(x,tz=dt.UTC)
-        #     )
-        #     self.records["HEIGHT"] = np.int8( 
-        #         self.records["RANGE"] * np.sin(np.deg2rad(30.))
-        #     )
-        #     self.records.to_csv(
-        #         to_file, float_format="%g", 
-        #         header=True, index=False
-        #     )
-        # else:
-        #     self.records = pd.read_csv(to_file, parse_dates=["DATE"])
+        from scipy.io import loadmat
 
-        # self.records.DATE = self.records.DATE.apply(
-        #     lambda x: x.replace(second=0, minute=5*int(x.minute/5))
-        # )
-        # print(self.records.DATE.unique())
+        # Only load these parameters along with time
+        self.dates = dates
+        o = loadmat(from_file)
+        self.yf = pd.DataFrame()
+        for k in list(o.keys()):
+            setattr(self, k, o[k])
+        self.yf["Alt"] = self.Alt.ravel()
+        Ne = self.Ne.ravel()
+        Ne[Ne<0] = np.nan
+        self.yf["Ne"] = Ne
+        self.yf["Time"] = np.array(
+            [self.Time[1,:].tolist()]*self.Alt.shape[0]
+        ).ravel()
+        self.yf.dropna(inplace=True)
+        self.yf.Time = self.yf.Time.apply(
+            lambda x: dt.datetime.fromordinal(int(x)) + dt.timedelta(days=x%1) - dt.timedelta(days = 366)
+        )
         create_eiscat_line_plot(self, "eiscat.png")
         return
     
-    def _get_at_specifif_height_(self, ax, h=100, color="g", ms=0.6, multiplier=1e-9):
-        o = self.records[
-            (self.records.HEIGHT == 10.*int(h/10))
+    def _get_at_specifif_height_(self, ax, h=100, color="g", ms=1.2, multiplier=1e-9):
+        def smooth(y, box_pts):
+            box = np.ones(box_pts)/box_pts
+            y_smooth = np.convolve(y, box, mode='same')
+            return y_smooth
+        
+        o = self.yf[
+            (self.yf.Alt >= h-5)
+            & (self.yf.Alt <= h+5)
         ]
-        o.drop_duplicates(subset="DATE", keep="last", inplace=True,)
-        o = o[o.POP>=0]
-        o.set_index("DATE",inplace=True)
-        f = o.reindex(
-            pd.date_range(
-                start=o.index.min(),
-                end=o.index.max(),
-                freq="40s"
-            )
-        ).interpolate(method="cubic")
-        o.reset_index(inplace=True)
-        f.index.name = "DATE"
-        f.reset_index(inplace=True)
-        mul = "{%d}"%int(np.log10(multiplier))
-        df = f[
-            f.DATE == dt.datetime(2017,9,6,12,1,20,tzinfo=dt.timezone.utc)
+        o.drop_duplicates(subset="Time", keep="last", inplace=True,)
+        o.Ne = smooth(o.Ne, 7)
+        
+        df = o[
+            (o.Time >= dt.datetime(2017,9,6,12,1,))
+            & (o.Time <= dt.datetime(2017,9,6,12,3))
         ]
+        print(df)
         pcnt, absolute = (
-            np.round((df.POP.tolist()[0]-f.POP.tolist()[0])/f.POP.tolist()[0], 2),
-            np.round((df.POP.tolist()[0]-f.POP.tolist()[0]), 2)
+            np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0])/o.Ne.tolist()[0], 2),
+            np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0]), 2)
         )
-        print(pcnt, absolute*1e-10)
+        print(pcnt, absolute*1e-9)
         ax.plot(
-            f.DATE, f.POP*multiplier, marker=".", 
+            o.Time, o.Ne*multiplier, marker=".",
             color=color, ls="None", ms=ms,
-            label=fr"$h={h}$ km, ($\times 10^{mul}$) []"
+            label=fr"$h={h}$ km, " + r"[$\theta_{N_e}$=%.1f, $\delta_{N_e}$=%.1f$\times 10^{9}$]"%(pcnt, absolute*1e-9)
         )
-        return f
+        o.to_csv(f"x{h}.csv", index=False)
+        return
 
 class Radar(object):
 
@@ -518,9 +469,21 @@ class Radar(object):
         return (180.0 * alpha / np.pi)
     
     def recalculate_elv_angle(self, tdiff=None):
+        R = 6371.
         self.df["elv"] = self.caclulate_elevation_angle(
-            self.df.phi0, self.df.bmnum, self.df.tfreq*1e6, tdiff
+            self.df.phi0, self.df.bmnum, self.df.tfreq*1e3, tdiff
         )
+        self.df["gate"] = np.copy(self.df.slist)
+        self.df.slist = (self.df.slist*self.df.rsep) + self.df.frang 
+        self.df["vheight_2p"] = (
+            (
+                R**2 + self.df.slist**2 + (
+                    2*self.df.slist*R*np.sin(np.deg2rad(self.df.elv))
+                )
+            )**0.5 - 
+            R
+        )        
+        self.df["vheight_Ch"] = self.df.slist.apply(lambda x: utils.chisham(x))
         return
 
     def calculate_decay_rate(self):
@@ -542,7 +505,7 @@ if __name__ == "__main__":
         dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
     # GPS1deg(dates)
-    # Eiscat(dates)
+    Eiscat(dates)
     # Radar("sas", dates)
     # Radar("kod", dates)
     # Radar("pgr", dates)
