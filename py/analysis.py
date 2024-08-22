@@ -177,7 +177,7 @@ def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
     radar.recalculate_elv_angle(tdiff=tdiff)    
     radar.df["unique_tfreq"] = radar.df.tfreq.apply(lambda x: int(x/0.5)*0.5)
     radar.df = radar.df[radar.df.unique_tfreq.isin([10.5])]   
-    rti = RangeTimePlot(3000, dates, "", 4)
+    rti = RangeTimePlot(3000, dates, "", 3)
     ax = rti.addParamPlot(
         radar.df, beam, "", p_max=45, p_min=0, xlabel="", add_gflg=False,
         ylabel="Range gate", zparam="elv", label="Elevation (deg)",
@@ -186,12 +186,7 @@ def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
     ax.text(0.01, 1.05, f"{rad.upper()} / {beam}", ha="left", va="center", transform=ax.transAxes)
     rti.addParamPlot(
         radar.df, beam, "", p_max=1000, p_min=0, xlabel="", add_gflg=False,
-        ylabel="Range gate", zparam="vheight_2p", label=r"$V_h$ [2-Parm Model] (km)",
-        overlay_sza=False, cmap = plt.cm.Spectral_r
-    )
-    rti.addParamPlot(
-        radar.df, beam, "", p_max=1000, p_min=0, xlabel="", add_gflg=False,
-        ylabel="Range gate", zparam="vheight_Ch", label=r"$V_h$ [Chisham Model] (km)",
+        ylabel="Range gate", zparam="vheight_2p", label=r"$V_h$ [Chisham Model] (km)",
         overlay_sza=False, cmap = plt.cm.Spectral_r, 
     )
     rti.addParamPlot(
