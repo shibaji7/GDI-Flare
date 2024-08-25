@@ -202,7 +202,7 @@ class Eiscat(object):
     
     def __init__(
         self, dates, 
-        from_file = "database/PP_6Sep17.mat",
+        from_file = "database/PP_6Sep17.0825.mat",
         to_file = "dataset/MAD6301_2017-09-06_bella_60@vhf.txt"
     ):
         from scipy.io import loadmat
@@ -227,7 +227,7 @@ class Eiscat(object):
         create_eiscat_line_plot(self, "eiscat.png")
         return
     
-    def _get_at_specifif_height_(self, ax, h=100, color="g", ms=1.2, multiplier=1e-9):
+    def _get_at_specifif_height_(self, ax=None, h=100, color="g", ms=1.2, multiplier=1e-9):
         def smooth(y, box_pts):
             box = np.ones(box_pts)/box_pts
             y_smooth = np.convolve(y, box, mode='same')
@@ -248,12 +248,13 @@ class Eiscat(object):
             np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0])/o.Ne.tolist()[0], 2),
             np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0]), 2)
         )
-        ax.plot(
-            o.Time, o.Ne*multiplier, marker=".",
-            color=color, ls="None", ms=ms,
-            label=fr"$h={h}$ km, " + r"[$\theta_{N_e}$=%.1f, $\delta_{N_e}$=%.1f$\times 10^{9}$]"%(pcnt, absolute*1e-9)
-        )
-        return
+        if ax:
+            ax.plot(
+                o.Time, o.Ne*multiplier, marker=".",
+                color=color, ls="None", ms=ms,
+                label=fr"$h={h}$ km, " + r"[$\theta_{N_e}$=%.1f, $\delta_{N_e}$=%.1f$\times 10^{9}$]"%(pcnt, absolute*1e-9)
+            )
+        return o
 
 class Radar(object):
 
