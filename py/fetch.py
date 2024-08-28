@@ -202,57 +202,67 @@ class Eiscat(object):
     
     def __init__(
         self, dates, 
-        from_file = "database/PP_6Sep17.0825.mat",
-        to_file = "dataset/MAD6301_2017-09-06_bella_60@vhf.txt"
+        from_file = "database/MAD6400_2017-09-06_bella_60@vhf.txt",
+        to_file = "dataset/EISCAT_Tromso_vhf.csv"
     ):
-        from scipy.io import loadmat
-
-        # Only load these parameters along with time
-        self.dates = dates
-        o = loadmat(from_file)
-        self.yf = pd.DataFrame()
-        for k in list(o.keys()):
-            setattr(self, k, o[k])
-        self.yf["Alt"] = self.Alt.ravel()
-        Ne = self.Ne.ravel()
-        Ne[Ne<0] = np.nan
-        self.yf["Ne"] = Ne
-        self.yf["Time"] = np.array(
-            [self.Time[1,:].tolist()]*self.Alt.shape[0]
-        ).ravel()
-        self.yf.dropna(inplace=True)
-        self.yf.Time = self.yf.Time.apply(
-            lambda x: dt.datetime.fromordinal(int(x)) + dt.timedelta(days=x%1) - dt.timedelta(days = 366)
-        )
+        if not os.path.exists(to_file):
+            o = []
+            with open(from_file, "r") as f:
+                lines = f.readlines()
+                header = list(filter(None, lines[0].replace("\n", "").split(" ")))
+                for line in lines[1:]:
+                    line = list(filter(None, line.replace("\n", "").split(" ")))
+                    o.append(dict(zip(header, line)))
+            o = pd.DataFrame.from_records(o)
+            o = o.astype(
+                {
+                    "GDALT": "float32",
+                    "NE": "float64",
+                    "DNE": "float64",
+                    "TR": "float64",
+                    "DTR": "float64",
+                    "UT1_UNIX": "float64",
+                    "UT2_UNIX": "float64",
+                    "AZM": "float32",
+                    "ELM": "float32",
+                }
+            )
+            o = o[["GDALT", "NE", "DNE", "TR", "DTR", "UT1_UNIX", "AZM", "ELM"]]
+            o["TIME"] = o.UT1_UNIX.apply(lambda x: dt.datetime.utcfromtimestamp(x))
+            o["COR_NE"] = o.NE * (1+o.TR)
+            o.to_csv(to_file, float_format="%g", header=True, index=False)
+        else:
+            o = pd.read_csv(to_file, parse_dates=["TIME"])
+        self.yf = o.copy()
         create_eiscat_line_plot(self, "eiscat.png")
         return
     
-    def _get_at_specifif_height_(self, ax=None, h=100, color="g", ms=1.2, multiplier=1e-9):
+    def _get_at_specifif_height_(self, ax=None, h=100, color="g", ms=1.2, multiplier=1e-10):
         def smooth(y, box_pts):
             box = np.ones(box_pts)/box_pts
             y_smooth = np.convolve(y, box, mode='same')
             return y_smooth
         
         o = self.yf[
-            (self.yf.Alt >= h-5)
-            & (self.yf.Alt <= h+5)
+            (self.yf.GDALT >= h-5)
+            & (self.yf.GDALT <= h+5)
         ]
-        o.drop_duplicates(subset="Time", keep="last", inplace=True,)
-        o.Ne = smooth(o.Ne, 7)
+        o.drop_duplicates(subset="TIME", keep="last", inplace=True,)
+        o.COR_NE = smooth(o.COR_NE, 7)
         
         df = o[
-            (o.Time >= dt.datetime(2017,9,6,12,1,))
-            & (o.Time <= dt.datetime(2017,9,6,12,3))
+            (o.TIME >= dt.datetime(2017,9,6,12,1,))
+            & (o.TIME <= dt.datetime(2017,9,6,12,3))
         ]
         pcnt, absolute = (
-            np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0])/o.Ne.tolist()[0], 2),
-            np.round((df.Ne.tolist()[0]-o.Ne.tolist()[0]), 2)
+            np.round((df.COR_NE.tolist()[0]-o.COR_NE.tolist()[0])/o.COR_NE.tolist()[0], 2),
+            np.round((df.COR_NE.tolist()[0]-o.COR_NE.tolist()[0]), 2)
         )
         if ax:
             ax.plot(
-                o.Time, o.Ne*multiplier, marker=".",
+                o.TIME, o.COR_NE*multiplier, marker=".",
                 color=color, ls="None", ms=ms,
-                label=fr"$h={h}$ km, " + r"[$\theta_{N_e}$=%.1f, $\delta_{N_e}$=%.1f$\times 10^{9}$]"%(pcnt, absolute*1e-9)
+                label=fr"$h={h}$ km, " + r"[$\theta_{N_e}$=%.1f, $\delta_{N_e}$=%.1f$\times 10^{10}$]"%(pcnt, absolute*1e-9)
             )
         return o
 
@@ -515,3 +525,4 @@ if __name__ == "__main__":
     # Radar("kod", dates)
     # Radar("pgr", dates)
     # SolarDataset(dates)
+    

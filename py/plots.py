@@ -44,11 +44,10 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     ax = fig.add_subplot(311)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
-    import utils
-    X, Y, Z = utils.get_gridded_parameters(eiscat.yf, "Time", "Alt", "Ne", rounding=True)
     im = ax.scatter(
-        eiscat.yf.Time, eiscat.yf.Alt, c=eiscat.yf.Ne, s=10, marker="s", alpha=0.7,
-        norm=matplotlib.colors.LogNorm(vmax=3e11, vmin=1e9),
+        eiscat.yf.TIME.apply(lambda x: x+dt.timedelta(minutes=7)), 
+        eiscat.yf.GDALT, c=eiscat.yf.COR_NE, s=200, marker="s", alpha=0.7,
+        norm=matplotlib.colors.LogNorm(vmax=1e12, vmin=1e9),
         edgecolors="None", cmap="gist_rainbow", lw=0.01
     )
     pos = ax.get_position()
@@ -71,14 +70,14 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
     eiscat._get_at_specifif_height_(ax, 100, color="r")
     eiscat._get_at_specifif_height_(ax, 120, color="b")
-    eiscat._get_at_specifif_height_(ax, 150, color="g")
+    eiscat._get_at_specifif_height_(ax, 160, color="g")
     eiscat._get_at_specifif_height_(ax, 220, color="k")
     ax.set_xlim(dt.datetime(2017,9,6,10), dt.datetime(2017,9,6,15))
     ax.axvline(dt.datetime(2017,9,6,12,2), color="k", ls="-", lw=1.2)
     ax.set_xlabel("Time, UT")
     ax.set_ylabel(r"$N_e(h)$, $\times 10^{9}$ $m^{-3}$")
     ax.legend(loc=1, shadow=True, fancybox=True, numpoints=3)
-    ax.set_ylim(50, 400)
+    ax.set_ylim(0, 200)
 
     tau = 3
     dates = [
@@ -89,19 +88,19 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     alt_DE_ne, alt_F_ne= [], []
     for d in dates:
         o = eiscat.yf[
-            (eiscat.yf.Alt >= alt_DE_range[0])
-            & (eiscat.yf.Alt <= alt_DE_range[1])
-            & (eiscat.yf.Time >= d)
-            & (eiscat.yf.Time < d+dt.timedelta(minutes=tau))
+            (eiscat.yf.GDALT >= alt_DE_range[0])
+            & (eiscat.yf.GDALT <= alt_DE_range[1])
+            & (eiscat.yf.TIME >= d)
+            & (eiscat.yf.TIME < d+dt.timedelta(minutes=tau))
         ]
-        alt_DE_ne.append(np.nansum(o.Ne))
+        alt_DE_ne.append(np.nansum(o.COR_NE))
         o = eiscat.yf[
-            (eiscat.yf.Alt >= alt_F_range[0])
-            & (eiscat.yf.Alt <= alt_F_range[1])
-            & (eiscat.yf.Time >= d)
-            & (eiscat.yf.Time < d+dt.timedelta(minutes=tau))
+            (eiscat.yf.GDALT >= alt_F_range[0])
+            & (eiscat.yf.GDALT <= alt_F_range[1])
+            & (eiscat.yf.TIME >= d)
+            & (eiscat.yf.TIME < d+dt.timedelta(minutes=tau))
         ]
-        alt_F_ne.append(np.nansum(o.Ne))
+        alt_F_ne.append(np.nansum(o.COR_NE))
     pch_de, ach_de = (
         np.max(alt_DE_ne)/np.median(alt_DE_ne[:10]), 
         np.max(alt_DE_ne)-np.median(alt_DE_ne[:10])
