@@ -7,6 +7,111 @@ import matplotlib.dates as mdates
 from matplotlib.dates import DateFormatter
 import datetime as dt
 
+import pandas as pd
+
+def plot_FISM2(omni):
+    # f201710 = pd.read_csv("database/fism_flare_hr-201710.csv")
+    # f201710.time = f201710.time.apply(
+    #     lambda x: dt.datetime(1970,1,1) + dt.timedelta(seconds=x)
+    # )
+    # f201710 = f201710[
+    #     (f201710.time>=dt.datetime(2017, 9, 10, 16, 1)) & 
+    #     (f201710.time<dt.datetime(2017, 9, 10, 16, 2))
+    # ]
+    f201706 = pd.read_csv("database/fism_flare_hr-201706.csv")
+    f201706.time = f201706.time.apply(
+        lambda x: dt.datetime(1970,1,1) + dt.timedelta(seconds=x)
+    )
+    f201706flr = f201706[
+        (f201706.time>=dt.datetime(2017, 9, 6, 12, 2)) &
+        (f201706.time<dt.datetime(2017, 9, 6, 12, 3))
+    ]
+
+    fig = plt.figure(figsize=(8, 3), dpi=200)
+    ax = fig.add_subplot(111)
+    ax.tick_params(axis="both", labelsize=15)
+    #ax.semilogy(f201710.wavelength, f201710.irradiance, "r-", lw=0.8, label="X8.5, 10 September 2003")
+    ax.semilogy(f201706flr.wavelength, f201706flr.irradiance, 
+            "k-", lw=0.8, label="12:02 UT")
+    ax.set_title("Flare Class X9.3 / 6 September 2017", ha="left", va="center", fontdict={"size":15})
+    ax.legend(loc=1, prop={"size":15})
+    ax.set_xlabel("Wavelength [nm]", fontdict={"size":15, "fontweight": "bold"})
+    ax.set_xlim([0, 50])
+    #ax.set_ylim([1e-6, 1e-1])
+    ax.set_ylabel(r"Irradiance [$W/m^2/nm$]", fontdict={"size":15, "fontweight": "bold"})
+    fig.savefig("figures/fism2.png", bbox_inches="tight")
+
+    f201706 = pd.read_csv("database/2017-0.15.csv")
+    f201706.time = f201706.time.apply(
+        lambda x: dt.datetime(1970,1,1) + dt.timedelta(seconds=x)
+    )
+    print(f201706.head())
+    fig = plt.figure(figsize=(8, 4*3), dpi=200)
+    ax = fig.add_subplot(411)
+    ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
+    ax.tick_params(axis="both", labelsize=15)
+    ax.semilogy(f201706.time, f201706.irradiance, 
+            "k-", lw=0.8, label="12:02 UT")
+    ax.set_title("Flare Class X9.3 / 6 September 2017", ha="left", va="center", fontdict={"size":15})
+    ax.legend(loc=1, prop={"size":15})
+    #ax.set_xlabel("Time [UT]", fontdict={"size":15, "fontweight": "bold"})
+    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
+    ax.axvline(dt.datetime(2017,9,6,12,2), ls="-", color="r", lw=0.9)
+    ax.set_ylabel(r"Irradiance [$W/m^2/nm$]", fontdict={"size":15, "fontweight": "bold"})
+    ax.text(0.1,0.9,"(a)",ha="left",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+    #fig.savefig("figures/fism2-0.15.png", bbox_inches="tight")
+
+    #fig = plt.figure(figsize=(8, 9), dpi=200)
+    ax = fig.add_subplot(412)
+    ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
+    ax.tick_params(axis="both", labelsize=15)
+    ax.plot(omni.date, omni.Bz, "r.", ms=1, ls="None", label=r"$B_z$")
+    ax.plot(omni.date, omni.By, "b.", ms=1, ls="None", label=r"$B_y$")
+    ax.legend(loc=1, fontsize=15)
+    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
+    ax.set_ylim(-7, 7)
+    ax.set_ylabel("IMF [nT]", fontdict={"size":15, "fontweight": "bold"})
+    ax.text(0.1,0.9,"(b)",ha="left",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+    ax.axvline(dt.datetime(2017,9,6,12,2), color="r", ls="-", lw=0.9)
+    ax = fig.add_subplot(413)
+    ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
+    ax.tick_params(axis="both", labelsize=15)
+    ax.plot(omni.date, omni.AU, "r-", lw=1, label="AU")
+    ax.plot(omni.date, omni.AL, "b-", lw=1, label="AL")
+    ax.plot(omni.date, omni.AE, "k-", lw=1, label="AE")
+    ax.legend(loc=1, fontsize=15)
+    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
+    ax.set_ylabel("AE/AL/AU [nT]", fontdict={"size":15, "fontweight": "bold"})
+    ax.text(0.1,0.9,"(c)",ha="left",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+    ax.set_ylim(-500, 1000)
+    ax.axvline(dt.datetime(2017,9,6,12,2), color="r", ls="-", lw=0.9)
+    ax = fig.add_subplot(414)
+    ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+    ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
+    ax.tick_params(axis="both", labelsize=15)
+    ax.plot(omni.date, omni.SYMH, "k", lw=1, label="SYM-H")
+    ax.plot(omni.date, omni.ASYH, "r--", lw=1, label="ASY-H")
+    ax.legend(loc=1, fontsize=15)
+    ax.set_ylabel("A/SYM-H [nT]", fontdict={"size":15, "fontweight": "bold"})
+    ax.set_ylim(-100, 100)
+    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
+    ax.axvline(dt.datetime(2017,9,6,12,2), color="r", ls="-", lw=0.9)
+    ax.set_xlabel("Time [UT]", fontdict={"size":15, "fontweight": "bold"})
+    ax.text(0.1,0.9,"(d)",ha="left",va="center",transform=ax.transAxes, 
+            fontdict={"size":15, "fontweight": "bold"})
+    fig.savefig("figures/omni.png", bbox_inches="tight")
+    return
+
 def create_dtec_error_distribution(dtec, ptec, txt, fname="gps.dtec_error_dist.png"):
     setsize(10)
     fig = plt.figure(figsize=(8, 4), dpi=300)

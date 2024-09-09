@@ -22,6 +22,7 @@ import utils
 from cartopy.mpl.geoaxes import GeoAxes
 from descartes import PolygonPatch
 from matplotlib.projections import register_projection
+from cartopy.feature.nightshade import Nightshade
 from shapely.geometry import LineString, MultiLineString, Polygon, mapping
 
 

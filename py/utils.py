@@ -57,3 +57,12 @@ def get_gridded_parameters(
         np.isnan(plotParamDF[zparam].values), plotParamDF[zparam].values
     )
     return X, Y, Z
+
+
+def setsize(size=8):
+    import matplotlib as mpl
+
+    mpl.rcParams.update(
+        {"xtick.labelsize": size, "ytick.labelsize": size, "font.size": size}
+    )
+    return

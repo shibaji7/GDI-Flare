@@ -160,10 +160,46 @@ def create_GPS_error_list():
     ]
     GPS1deg(dates)
     dates = [
-        dt.datetime(2017,8,28),
-        dt.datetime(2017,8,29)
+        dt.datetime(2017,8,30),
+        dt.datetime(2017,8,31)
     ]
     GPS1deg(dates)
+    return
+
+def create_RTI_plot():
+    dates = [dt.datetime(2017,9,6,11), dt.datetime(2017,9,6,17)]
+    radar = Radar("sas", dates)
+    event_data = SolarDataset(
+        [dt.datetime(2017,9,6), dt.datetime(2017,9,7)]
+    )
+    
+    import matplotlib.dates as mdates
+    from matplotlib.dates import DateFormatter
+    import plots
+    import matplotlib.pyplot as plt
+    plots.setsize(12)
+    fig = plt.figure(figsize=(16, 9), dpi=300)
+
+    ax = fig.add_subplot(324)
+    ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
+    ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+    ax.plot(
+        event_data.omni.time, event_data.omni.BzGSM, 
+        color="r", ls="-", lw=0.8, label=r"$B_z$"
+    )
+    ax.plot(
+        event_data.omni.time, event_data.omni.ByGSM, 
+        color="g", ls="-", lw=0.8, label=r"$B_y$"
+    )
+    ax.plot(
+        event_data.omni.time, event_data.omni.BxGSE, 
+        color="k", ls="-", lw=0.8, label=r"$B_x$"
+    )
+    ax.legend(loc=1)
+    ax.set_ylabel("IMF, nT")
+    ax.set_ylim(-10, 10)
+    ax.set_xlim([dt.datetime(2017,9,6), dt.datetime(2017,9,7)])
+    fig.savefig("figures/RTI.png", bbox_inches="tight")
     return
 
 def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
@@ -199,9 +235,10 @@ def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
     return
 
 if __name__ == "__main__":
-    for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 18], [7, 7, 10]):
-        create_elev_angle_analysis(rad, tdiff*1e-3, b)
+    # for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 18], [7, 7, 10]):
+    #     create_elev_angle_analysis(rad, tdiff*1e-3, b)
         
     # create_GPS_error_list()
     # create_RTI_figure()
     # compare_quiet_versus_event_day()
+    create_RTI_plot()
