@@ -6,7 +6,7 @@ import bz2
 from loguru import logger
 import datetime as dt
 import numpy as np
-import tqdm
+from tqdm import tqdm
 from scipy import constants as C
 
 class Radar(object):
@@ -17,7 +17,7 @@ class Radar(object):
         self.dates = dates
         self.clean = clean
         self.type = type
-        tqdm.tqdm_pandas()
+        #tqdm.tqdm_pandas()
         self.__setup__()
         self.__fetch_data__()
         self.calculate_decay_rate()

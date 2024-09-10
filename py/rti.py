@@ -52,8 +52,8 @@ class RangeTimePlot(object):
         # Configure axes
         ax.tick_params(axis="both", labelsize=15)
         ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
-        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
-        ax.xaxis.set_minor_locator(mdates.MinuteLocator(byminute=range(0, 60, 15)))
+        ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 4)))
+        #ax.xaxis.set_minor_locator(mdates.MinuteLocator(byminute=range(0, 60, 15)))
         ax.set_xlabel(xlabel, fontdict={"size":15, "fontweight": "bold"})
         ax.set_xlim(self.unique_times)
         ax.set_ylim([180, self.nrang])

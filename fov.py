@@ -85,15 +85,15 @@ class CartoBase(object):
         if not hasattr(self, "ax"): self.ax = self._add_axis(draw_labels)
         return
 
-    def add_radars(self, radars, draw_labels=True):
+    def add_radars(self, radars, beamLimits, draw_labels=True):
         self._fetch_axis(draw_labels)
-        for r in radars.keys():
+        for b, r in zip(beamLimits, radars.keys()):
             rad = radars[r]
             self.overlay_radar(rad)
             self.overlay_fov(rad)
             self.overlay_fov(
                     rad,
-                    beamLimits=[7,8],
+                    beamLimits=[b, b+1],
                     lineColor="b",
                     fovAlpha=0.2,
             )
@@ -185,8 +185,8 @@ def plot_fov():
         xPanels=1, yPanels=1,
         basetag=0, ytitlehandle=0.95,
     )
-    cb.add_radars(radars, draw_labels=True)
+    cb.add_radars(radars, beamLimits=[7, 7, 10], draw_labels=True)
     cb.add_circle(60, -105, width=3, height=3) 
-    cb.save(f"database/fov.png")
+    cb.save(f"figures/fov.png")
     return
 plot_fov()
