@@ -333,8 +333,8 @@ def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
     return
 
 if __name__ == "__main__":
-    # for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 18], [7, 7, 10]):
-    #     create_elev_angle_analysis(rad, tdiff*1e-3, b)
+    for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 18], [7, 7, 10]):
+        create_elev_angle_analysis(rad, tdiff*1e-3, b)
         
     # create_GPS_error_list()
     # create_RTI_figure()
