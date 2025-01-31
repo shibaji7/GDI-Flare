@@ -152,7 +152,7 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     im = ax.scatter(
         eiscat.yf.TIME.apply(lambda x: x+dt.timedelta(minutes=7)), 
         eiscat.yf.GDALT, c=eiscat.yf.COR_NE, s=200, marker="s", alpha=0.7,
-        norm=matplotlib.colors.LogNorm(vmax=1e12, vmin=1e9),
+        norm=matplotlib.colors.LogNorm(vmax=1e12, vmin=1e10),
         edgecolors="None", cmap="gist_rainbow", lw=0.01
     )
     pos = ax.get_position()
