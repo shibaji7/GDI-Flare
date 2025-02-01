@@ -29,7 +29,7 @@ class Gardient(object):
         yparam="GDLAT", zparam="TEC",
         lat_range=[0, 90], 
         lon_range=[-150, -70], 
-        dlat=4, dlon=4
+        dlat=3, dlon=3
     ):
         self.tec_df = tec_df
         self.xparam = xparam
@@ -168,6 +168,7 @@ class GPS1X1(GPS):
                 "parent": None
             }
             o.to_csv(self.raw_file, index=False, header=True)
+        print(self.frames[self.__fetch_key__(0)])
         logger.info(f"File cotent header:\n {self.frames[self.__fetch_key__(0)].head()}")
         return
     
@@ -197,12 +198,12 @@ class GPS1X1(GPS):
         range=[-150, -70, 20, 90],
         rads=[],
         component=None,
-        sub=False,
+        sub=False, dlat=3, dlon=3
     ):
         self.base_time = 0
         du = self.frames[self.__fetch_key__(ds_counter)]["data"].copy()
         du = du[du.TIME==date]
-        g = Gardient(du)
+        g = Gardient(du, dlat=dlat, dlon=dlon)
         g.parse_matrix()
         g.grad2D_by_np()
         cb = CartoBase(
@@ -222,9 +223,9 @@ class GPS1X1(GPS):
             else:
                 dxZ = dxZ - self.base_dxZ
                 dyZ = dyZ - self.base_dyZ
-        cb.add_TEC_gradient(g.X, g.Y, dxZ, dyZ, True, 2, 2)
+        cb.add_TEC_gradient(g.X, g.Y, dxZ, dyZ, True, 2, 4)
         X, Y, Z = get_gridded_parameters(du, xparam="GLON", yparam="GDLAT", zparam="TEC")
-        cb.add_TEC(X, Y, Z, alpha=0.3)
+        cb.add_TEC(X, Y, Z, alpha=.9)
         for rad in rads:
             cb.overlay_radar(rad)
             cb.overlay_fov(rad)
@@ -345,6 +346,38 @@ def gradient_TS(dates, g, g0, clat=65, grid_lat=5, clon=-95, grid_lon=5, ds_coun
     fig.savefig(f"figures/TS{dates[0].strftime('%d')}.png", bbox_inches="tight")
     return
 
+def dxgradiaent(
+    g, fname, date, ds_counter, 
+    range=[-150, -70, 20, 90],
+    component="east",
+    sub=False,
+):
+    du = g.frames[g.__fetch_key__(ds_counter)]["data"].copy()
+    du = du[du.TIME==date]
+    cb = CartoBase(
+        date, xPanels=1, yPanels=3,
+        range=range,
+        basetag=0,
+        ytitlehandle=0.95,
+    )
+    draw_labels = [True, False, True, False]
+    for j in np.arange(1,4):
+        gx = Gardient(du, dlat=j, dlon=j)
+        gx.parse_matrix()
+        gx.grad2D_by_np()
+        dxZ, dyZ = gx.dxZ, gx.dyZ
+        if component:
+            dyZ = np.zeros_like(dyZ) if component=="east" else dyZ
+            dxZ = np.zeros_like(dxZ) if component=="north" else dxZ
+    
+        ax = cb._add_axis(draw_labels=draw_labels[j])
+        cb.add_TEC_gradient(gx.X, gx.Y, dxZ, dyZ, True, 2, 4, ax=ax)
+        X, Y, Z = get_gridded_parameters(du, xparam="GLON", yparam="GDLAT", zparam="TEC")
+        cb.add_TEC(X, Y, Z, alpha=.9, ax=ax)
+    
+    cb.save(fname)
+    return
+
 if __name__ == "__main__":
     # Alternte date - 2017-08-30
     radars = []
@@ -361,17 +394,20 @@ if __name__ == "__main__":
         "database/gps170906g.003.txt.gz", 
         "TXT.GZ"
     )
-    g0 = GPS1X1(
-        "database/gps170830g.002.txt.gz", 
-        "TXT.GZ"
-    )
+    # g0 = GPS1X1(
+    #     "database/gps170830g.002.txt.gz", 
+    #     "TXT.GZ"
+    # )
     import os
-    os.mkdir("figures/06Sep")
+    os.makedirs("figures/06Sep", exist_ok=True)
     #gradient_TS(dates, g, g0, clat=60, grid_lat=5, clon=-105, grid_lon=5)
     d = dt.datetime(2017,9,6,11,47,30)
-    for i in range(10):
-        # g.summary(f"figures/06Sep/TEC.{d.strftime('%H-%M')}.png", d, 1)
-        # g.gradient(f"figures/06Sep/grad.{d.strftime('%H-%M')}.png", d, 1)
+    # for i in range(10):
+    #     # g.summary(f"figures/06Sep/TEC.{d.strftime('%H-%M')}.png", d, 1)
+    #     g.gradient(
+    #         f"figures/06Sep/grad.{d.strftime('%H-%M')}.png", d, 1, 
+    #         component="east", dlat=1, dlon=1
+    #     )
         # g.gradient(
         #     f"figures/06Sep/grad.east,{d.strftime('%H-%M')}.png", d, 1,
         #     component="east"
@@ -380,11 +416,11 @@ if __name__ == "__main__":
         #     f"figures/06Sep/grad.east,sub,{d.strftime('%H-%M')}.png", d, 1,
         #     component="east", sub=True
         # )
-        g.overlay(
-            f"figures/06Sep/grad.east,sub,{d.strftime('%H-%M')}.png", d, 1,
-            rads=radars, component="east", sub=True
-        )
-        d += dt.timedelta(minutes=5)
+        # g.overlay(
+        #     f"figures/06Sep/grad.east,sub,{d.strftime('%H-%M')}.png", d, 1,
+        #     rads=radars, component="east", sub=True
+        # )
+        # d += dt.timedelta(minutes=5)
     # Running code for 5Sep
     # g = GPS1X1(
     #     "database/gps170905g.002.txt.gz", 
@@ -395,3 +431,5 @@ if __name__ == "__main__":
     #     g.summary(f"figures/05Sep/TEC.{d.strftime('%H-%M')}.png", d, 1)
     #     g.gradient(f"figures/05Sep/grad.{d.strftime('%H-%M')}.png", d, 1)
     #     d += dt.timedelta(minutes=5)
+        
+    dxgradiaent(g, f"figures/06Sep/FigureS02.png", d, 1)

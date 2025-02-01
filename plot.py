@@ -186,7 +186,7 @@ class CartoBase(object):
         }
         return
 
-    def _add_axis(self, draw_labels=True):
+    def _add_axis(self, draw_labels=False):
         self._num_subplots_created += 1
         ax = self.fig.add_subplot(
             self.xPanels, self.yPanels, 
@@ -197,18 +197,22 @@ class CartoBase(object):
         ax.add_feature(Nightshade(self.date, alpha=0.3))
         ax.set_global()
         ax.coastlines(color="k", alpha=0.5, lw=0.5)
-        gl = ax.gridlines(crs=self.proj["from"], linewidth=0.3, 
-            color="k", alpha=0.5, linestyle="--", draw_labels=draw_labels)
-        gl.xlocator = mticker.FixedLocator(np.arange(-180,180,30))
-        gl.ylocator = mticker.FixedLocator(np.arange(-90,90,20))
-        gl.xformatter = LONGITUDE_FORMATTER
-        gl.yformatter = LATITUDE_FORMATTER
+        
         if self.range: ax.set_extent(self.range)
-        tag = chr(96 + self._num_subplots_created + self.basetag)
+        if draw_labels:
+            gl = ax.gridlines(crs=self.proj["from"], linewidth=0.3, 
+            color="k", alpha=0.5, linestyle="--", draw_labels=draw_labels)
+            gl.xlocator = mticker.FixedLocator(np.arange(-180,180,30))
+            gl.ylocator = mticker.FixedLocator(np.arange(-90,90,20))
+            gl.xformatter = LONGITUDE_FORMATTER
+            gl.yformatter = LATITUDE_FORMATTER
+            
         # ax.text(0.05, 1.05, , 
         #     ha="left", va="bottom", transform=ax.transAxes)
-        plt.suptitle("(%s) "%tag+self.date.strftime("%d %b %Y, %H:%M UT"), 
-            x=0.5, y=self.ytitlehandle, ha="center", va="bottom", fontweight="bold", fontsize=15)
+            plt.suptitle("(%s) "%self.date.strftime("%d %b %Y, %H:%M UT"), 
+                x=0.5, y=self.ytitlehandle, ha="center", va="bottom", fontweight="bold", fontsize=15)
+        tag = chr(96 + self._num_subplots_created + self.basetag)
+        ax.text(0.05, .95, "(%s)"%tag, ha="left", va="center", transform=ax.transAxes)
         return ax
 
     def save(self, filepath):
@@ -381,15 +385,15 @@ class CartoBase(object):
             transform=self.proj["to"],
             alpha=0.6
         )
-        self._add_hcolorbar(im, label="dTEC [TECu]")
+        self._add_hcolorbar(ax, im, label="dTEC [TECu]")
         return
 
-    def add_TEC(self, X, Y, Z, alpha=0.6, cmap="jet", vlim=[0, 20]):
-        self._fetch_axis(draw_labels=True)
-        # Plot based on transcript
+    def add_TEC(self, X, Y, Z, alpha=1, cmap="Spectral", vlim=[0, 8], ax=None):
+        # self._fetch_axis(draw_labels=True)
+        # # Plot based on transcript
         xyz = self.proj["to"].transform_points(self.proj["from"], X, Y)
         x, y = xyz[:, :, 0], xyz[:, :, 1]
-        im = self.ax.pcolor(
+        im = ax.pcolor(
             x, y, Z.T,
             cmap=cmap,
             vmin=vlim[0],
@@ -397,7 +401,7 @@ class CartoBase(object):
             transform=self.proj["to"],
             alpha=alpha
         )
-        self._add_hcolorbar(im, label="TEC [TECu]")
+        self._add_hcolorbar(ax, im, label="TEC [TECu]")
         return
 
     def add_TEC_Scatter(self, x, y, z, alpha=0.6):
@@ -416,13 +420,13 @@ class CartoBase(object):
         self._add_hcolorbar(im, label="TEC [TECu]")
         return
 
-    def add_TEC_gradient(self, X, Y, dxZ, dyZ, tag=False, lenx=3, scale=3):
-        self._fetch_axis(draw_labels=tag)
-        # Plot based on transcript
+    def add_TEC_gradient(self, X, Y, dxZ, dyZ, tag=False, lenx=3, scale=3, ax=None):
+        # self._add_axis(draw_labels=tag)
+        # # Plot based on transcript
         xyz = self.proj["to"].transform_points(self.proj["from"], X, Y)
         x, y = xyz[:, :, 0], xyz[:, :, 1]
-        self.ax.scatter(x, y, color="k", s=0.05)
-        ql = self.ax.quiver(
+        ax.scatter(x, y, color="k", s=0.05)
+        ql = ax.quiver(
             x,
             y,
             dxZ.T,
@@ -431,14 +435,15 @@ class CartoBase(object):
             headaxislength=0,
             linewidth=0.6,
             scale_units="inches",
+            zorder=4, color="k"
         )
         if tag:
-            self.ax.quiverkey(
+            ax.quiverkey(
                 ql,
                 0.97,
                 1.05,
                 lenx,
-                r"$\nabla_{\lambda,\phi}TEC$:"+str(lenx),
+                r"$\nabla_{\phi}n'_0$:"+str(lenx),
                 labelpos="N",
                 transform=self.proj["from"],
                 color="k",
@@ -446,9 +451,9 @@ class CartoBase(object):
             )
         return
 
-    def _add_hcolorbar(self, im, colormap="jet_r", label=""):
+    def _add_hcolorbar(self, ax, im, colormap="jet_r", label=""):
         """Add a colorbar to the right of an axis."""
-        pos = self.ax.get_position()
+        pos = ax.get_position()
         cpos = [
             pos.x0 + 0.3 * pos.width,
             pos.y0 - 0.15 * pos.height,
