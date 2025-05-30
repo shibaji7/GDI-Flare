@@ -5,6 +5,7 @@ __pycache__/
 
 database/
 figures/
+fitacf_location/
 
 # C extensions
 *.so
