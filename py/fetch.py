@@ -1,23 +1,23 @@
 import os
-import pandas as pd
-import pydarn 
+import pandas as pd # type: ignore
+import pydarn # type: ignore
 import glob
 import bz2
-from loguru import logger
+from loguru import logger # type: ignore
 import datetime as dt
 import numpy as np
-from tqdm import tqdm
+from tqdm import tqdm # type: ignore
 from scipy import constants as C
-import xarray as xr
+import xarray as xr # type: ignore
 
-from sunpy import timeseries as ts
-from sunpy.net import Fido
-from sunpy.net import attrs as a
+from sunpy import timeseries as ts # type: ignore
+from sunpy.net import Fido # type: ignore
+from sunpy.net import attrs as a # type: ignore
 
 from plots import create_eiscat_line_plot
 import utils
 
-os.environ["OMNIDATA_PATH"] = "/home/shibaji/omni/"
+os.environ["OMNIDATA_PATH"] = "/home/chakras4/OMNI/"
 
 class SolarDataset(object):
     """
@@ -25,7 +25,7 @@ class SolarDataset(object):
     from the repo using SunPy
     """
 
-    def __init__(self, dates):
+    def __init__(self, dates, dataset=[1, 2, 3]):
         """
         Parameters
         ----------
@@ -33,9 +33,9 @@ class SolarDataset(object):
         """
         self.dates = dates
         self.dfs = {}
-        self.__load_FISM__()
-        self._load_omni_()
-        self.__loadGOES__()
+        if 1 in dataset: self.__load_FISM__()
+        if 2 in dataset: self._load_omni_()
+        if 3 in dataset: self.__loadGOES__()
         return
     
     def _load_omni_(self, res=1):
@@ -291,7 +291,8 @@ class Radar(object):
     def __setup__(self):
         logger.info(f"Setup radar: {self.rad}")
         self.files = glob.glob(
-            f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{self.dates[0].strftime('%Y%m%d')}*{self.rad}.*"
+            #f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{self.dates[0].strftime('%Y%m%d')}*{self.rad}.*"
+            f"fitacf_location/{self.dates[0].strftime('%Y%m%d')}*{self.rad}.*{self.type}*"
         ) 
         self.files.sort()
         self.hdw = pydarn.read_hdw_file(self.rad)
@@ -311,6 +312,7 @@ class Radar(object):
     def __fetch_data__(self):
         if self.clean: os.remove(f"database/{self.dates[0].strftime('%Y%m%d')}.{self.rad}.{self.type}.csv")
         if os.path.exists(f"database/{self.dates[0].strftime('%Y%m%d')}.{self.rad}.{self.type}.csv"):
+            logger.info(f"Reading file: {self.dates[0].strftime('%Y%m%d')}.{self.rad}.{self.type}.csv")
             self.df = pd.read_csv(f"database/{self.dates[0].strftime('%Y%m%d')}.{self.rad}.{self.type}.csv", parse_dates=["time"])
         else:
             records = []
@@ -326,12 +328,12 @@ class Radar(object):
 
     def __tocsv__(self, records):
         time, v, slist, p_l, frang, scan, beam,\
-            w_l, gflg, elv, phi0, tfreq, rsep = (
+            w_l, gflg, elv, phi0, tfreq, rsep, v_e = (
             [], [], [],
             [], [], [],
             [], [], [],
             [], [], [],
-            [],
+            [], [],
         )
         for r in records:
             if "v" in r.keys():
@@ -351,6 +353,7 @@ class Radar(object):
                 scan.extend([r["scan"]]*len(r["v"]))
                 beam.extend([r["bmnum"]]*len(r["v"]))
                 v.extend(r["v"])
+                v_e.extend(r["v_e"])
                 gflg.extend(r["gflg"])
                 slist.extend(r["slist"])
                 p_l.extend(r["p_l"])
@@ -360,6 +363,7 @@ class Radar(object):
             
         self.df = pd.DataFrame()
         self.df["v"] = v
+        self.df["v_e"] = v_e
         self.df["gflg"] = gflg
         self.df["slist"] = slist
         self.df["bmnum"] = beam
@@ -509,12 +513,12 @@ class Radar(object):
         return
 
 if __name__ == "__main__":
-    dates = [
-        dt.datetime(2017,9,6), dt.datetime(2017,9,7),
-    ]
+    # dates = [
+    #     dt.datetime(2017,9,6), dt.datetime(2017,9,7),
+    # ]
     # GPS1deg(dates)
-    Eiscat(dates)
-    # Radar("sas", dates)
+    # Eiscat(dates)
+    # Radar("sas", dates, type="fitacf")
     # Radar("kod", dates)
     # Radar("pgr", dates)
     # SolarDataset(dates)
@@ -525,4 +529,11 @@ if __name__ == "__main__":
     # Radar("kod", dates)
     # Radar("pgr", dates)
     # SolarDataset(dates)
+    for d in range(1):
+        dates = [
+            dt.datetime(2017,8,1)+dt.timedelta(d), 
+            dt.datetime(2017,8,2)+dt.timedelta(d+1),
+        ]
+        Radar("sas", dates, type="fitacf")
+
     
