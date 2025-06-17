@@ -86,7 +86,7 @@ class CartoBase(object):
         self._num_subplots_created = 0
         self.terminator = terminator
         self.title = title
-        self.fig = plt.figure(figsize=(3*yPanels, 3*xPanels), dpi=300) # Size for website
+        self.fig = plt.figure(figsize=(3*yPanels, 3*xPanels), dpi=1000) # Size for website
         mpl.rcParams.update({"xtick.labelsize": 10, "ytick.labelsize":10, "font.size":10})
         self.ytitlehandle = ytitlehandle
         self.proj = {
@@ -134,11 +134,11 @@ class CartoBase(object):
         else:
             ax.text(0.05, 0.9, self.title, ha="left", va="bottom", transform=ax.transAxes, fontdict={"size":10})
         
-        if self.basetag in [0, 2]:
-            txt = self.date.strftime("%d %b %Y") + "\n" + "Coord: Geo"
-            ax.text(0.05, 1.1, txt, 
-                ha="left", va="bottom", transform=ax.transAxes,
-                fontdict={"size":10, "weight":"bold"})
+        # if self.basetag in [0, 2]:
+        #     txt = self.date.strftime("%d %b %Y") + "\n" + "Coord: Geo"
+        #     ax.text(0.05, 1.1, txt, 
+        #         ha="left", va="bottom", transform=ax.transAxes,
+        #         fontdict={"size":10, "weight":"bold"})
         return ax
 
     def save(self, filepath):
@@ -150,9 +150,10 @@ class CartoBase(object):
         plt.close()
         return
 
-    def _fetch_axis(self, draw_labels=True):
+    def _fetch_axis(self, draw_labels=True, add_tag=False):
         if not hasattr(self, "ax"): 
             self.ax = self._add_axis(draw_labels)
+        if add_tag:
             self.add_circle()
         return
 
@@ -281,11 +282,11 @@ class CartoBase(object):
         cb2.set_label(label)
         return
 
-    def _add_colorbar(self, im, colormap="jet_r", label=""):
+    def _add_colorbar(self, im, colormap="jet_r", label="", dx=0.05):
         """Add a colorbar to the right of an axis."""
         pos = self.ax.get_position()
         cpos = [
-            pos.x1 + 0.05,
+            pos.x1 + dx,
             pos.y0 + 0.2 * pos.height,
             0.02,
             pos.height * 0.5,
@@ -492,8 +493,8 @@ def plot_fov_data(month, day, file, plot_cicle=False, ini_tag=0):
         #     cb.add_circle(60, -105, width=8, height=5)
         cb.save(f"figures/fov_data.%s.png"%d.strftime("%d%H%M"))
     return
-plot_fov_data(9, 6, "database/gps170906g.003.txt.gz", False)
-plot_fov_data(8, 30, "database/gps170830g.002.txt.gz", True, 2)
+# plot_fov_data(9, 6, "database/gps170906g.003.txt.gz", False)
+# plot_fov_data(8, 30, "database/gps170830g.002.txt.gz", True, 2)
 
 # plot_difference(
 #     "database/gps170906g.003.txt.gz", 

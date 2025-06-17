@@ -35,7 +35,7 @@ class CartoBase(object):
         self.range = range
         self.basetag = basetag
         self._num_subplots_created = 0
-        self.fig = plt.figure(figsize=(6*yPanels, 6*xPanels), dpi=240) # Size for website
+        self.fig = plt.figure(figsize=(6*yPanels, 6*xPanels), dpi=1000) # Size for website
         mpl.rcParams.update({"xtick.labelsize": 15, "ytick.labelsize":15, "font.size":15})
         self.ytitlehandle = ytitlehandle
         self.proj = {
@@ -45,7 +45,7 @@ class CartoBase(object):
         }
         return
 
-    def _add_axis(self, draw_labels=True):
+    def _add_axis(self, draw_labels=True, tag=False):
         self._num_subplots_created += 1
         ax = self.fig.add_subplot(
             self.xPanels, self.yPanels, 
@@ -68,8 +68,9 @@ class CartoBase(object):
             ha="center", va="bottom", transform=ax.transAxes)
         # plt.suptitle(self.date.strftime("%d %b %Y, %H:%M UT"), 
         #     x=0.5, y=self.ytitlehandle, ha="center", va="bottom", fontweight="bold", fontsize=15)
-        ax.text(0.05, 0.9, "(a)", 
-            ha="left", va="center", transform=ax.transAxes)
+        if tag:
+            ax.text(0.05, 0.9, "(a)", 
+                ha="left", va="center", transform=ax.transAxes)
         return ax
 
     def save(self, filepath):

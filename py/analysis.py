@@ -143,6 +143,24 @@ def compare_quiet_versus_event_day():
     fig.savefig("figures/compare_days.png", bbox_inches="tight")
     return
 
+def create_RTI_midl_figure():
+    dates = [dt.datetime(2017,9,6), dt.datetime(2017,9,7)]
+    rads = ["fhw", "cve", "cvw"]
+    radars = {}
+    for rad in rads:
+        radars[rad] = Radar(rad, dates)
+        o = radars[rad].df
+        o["srange"] = (o.slist*o.rsep) + o.frang
+        o.gflg= o.gflg.where(
+            (
+                (o.srange < 180+(45*7)) | (o.srange > 1500)
+            ) | (o.time>=dt.datetime(2017,9,6,12,30)), 
+            0
+        )
+    
+    plot_figure2(radars, dates, [7,7,7], rads, ["(a)", "(b)", "(c)", "(d)"], 311)
+    return
+
 def create_RTI_figure():
     dates = [dt.datetime(2017,9,6), dt.datetime(2017,9,7)]
     rads = ["sas", "pgr", "kod"]
@@ -176,7 +194,7 @@ def create_RTI_plot():
     import plots
     import matplotlib.pyplot as plt
     plots.setsize(18)
-    fig = plt.figure(figsize=(8, 4*6), dpi=300)
+    fig = plt.figure(figsize=(8, 4*6), dpi=1000)
 
 
     ax = fig.add_subplot(611)
@@ -339,10 +357,11 @@ def create_elev_angle_analysis(rad="sas", tdiff=None, beam=7):
     return
 
 if __name__ == "__main__":
-    for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 18], [7, 7, 10]):
-        create_elev_angle_analysis(rad, tdiff*1e-3, b)
+    # for rad, tdiff, b in zip(["sas", "pgr", "kod"], [10, 5, 18], [7, 7, 10]):
+    #     create_elev_angle_analysis(rad, tdiff*1e-3, b)
         
     # create_GPS_error_list()
     # create_RTI_figure()
     # compare_quiet_versus_event_day()
     # create_RTI_plot()
+    create_RTI_midl_figure()

@@ -17,7 +17,7 @@ from sunpy.net import attrs as a # type: ignore
 from plots import create_eiscat_line_plot
 import utils
 
-os.environ["OMNIDATA_PATH"] = "/home/chakras4/OMNI/"
+os.environ["OMNIDATA_PATH"] = "/home/shibaji/OMNI/"
 
 class SolarDataset(object):
     """
@@ -282,7 +282,8 @@ class Radar(object):
         self.df[
             [
                 "v", "slist", "bmnum", "w_l",
-                "elv", "phi0", "time", "tfreq",
+                #"elv", "phi0", 
+                "time", "tfreq",
                 "scan", "gdlat", "glong", "sza"
             ]
         ].to_csv(fname, float_format="%g", index=False, header=True)
@@ -292,7 +293,7 @@ class Radar(object):
         logger.info(f"Setup radar: {self.rad}")
         self.files = glob.glob(
             #f"/sd-data/{self.dates[0].year}/{self.type}/{self.rad}/{self.dates[0].strftime('%Y%m%d')}*{self.rad}.*"
-            f"fitacf_location/{self.dates[0].strftime('%Y%m%d')}*{self.rad}.*{self.type}*"
+            f"fitacf_location/{self.dates[0].strftime('%Y%m%d')}*{self.rad}.*{self.type}*.bz2"
         ) 
         self.files.sort()
         self.hdw = pydarn.read_hdw_file(self.rad)
@@ -513,9 +514,9 @@ class Radar(object):
         return
 
 if __name__ == "__main__":
-    # dates = [
-    #     dt.datetime(2017,9,6), dt.datetime(2017,9,7),
-    # ]
+    dates = [
+        dt.datetime(2017,9,6), dt.datetime(2017,9,7),
+    ]
     # GPS1deg(dates)
     # Eiscat(dates)
     # Radar("sas", dates, type="fitacf")
@@ -529,11 +530,15 @@ if __name__ == "__main__":
     # Radar("kod", dates)
     # Radar("pgr", dates)
     # SolarDataset(dates)
-    for d in range(1):
-        dates = [
-            dt.datetime(2017,8,1)+dt.timedelta(d), 
-            dt.datetime(2017,8,2)+dt.timedelta(d+1),
-        ]
-        Radar("sas", dates, type="fitacf")
+    # for d in range(1):
+    #     dates = [
+    #         dt.datetime(2017,8,1)+dt.timedelta(d), 
+    #         dt.datetime(2017,8,2)+dt.timedelta(d+1),
+    #     ]
+    #     Radar("sas", dates, type="fitacf")
 
-    
+    Radar("cve", dates, type="fitacf3")
+    Radar("cvw", dates, type="fitacf3")
+    Radar("fhe", dates, type="fitacf3")
+    Radar("fhw", dates, type="fitacf3")
+    Radar("bks", dates, type="fitacf3")
