@@ -262,7 +262,7 @@ def plot_figure2(radars, dates, beams = [7, 7, 10], rads=["sas","pgr","kod"], ta
         ax = fig.add_subplot(ids+i)
         radr = radars[rad]
         rti = RangeTimePlot(3000, dates, "", 1, fov=radr.fov)
-        o = radr.df
+        o = radr.df.copy()
         o["gate"] = np.copy(o.slist)
         o.slist = (o.slist*o.rsep) + o.frang
         o.gflg= o.gflg.where(
@@ -277,7 +277,7 @@ def plot_figure2(radars, dates, beams = [7, 7, 10], rads=["sas","pgr","kod"], ta
         ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
         ax.text(0.01,0.9,tags[i] +"\t"+ rad.upper() + fr" / {beams[i]} / $f_0\sim$10.5 MHz",ha="left",va="center",transform=ax.transAxes,)
         ax = rti.addParamPlot(
-            o, beams[i], "", xlabel="", add_gflg=True, ax=ax, p_max=30, p_min=-30
+            o, beams[i], "", xlabel="", add_gflg=True, ax=ax, p_max=300, p_min=-300
         )
         ax.set_ylabel("Slant Range (km)")
         ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="k", ls="-", lw=1.2, label="12:02 UT")

@@ -158,7 +158,18 @@ def create_RTI_midl_figure():
             0
         )
     
-    plot_figure2(radars, dates, [7,7,7], rads, ["(a)", "(b)", "(c)", "(d)"], 311)
+    plot_figure2(radars, dates, [7,7,7], rads, ["(a)", "(b)", "(c)"], 311)
+    return
+
+
+def create_RTI_SAS_figure_beams():
+    dates = [dt.datetime(2017,9,6), dt.datetime(2017,9,7)]
+    rads = ["sas"]
+    radars = {}
+    for rad in rads:
+        radars[rad] = Radar(rad, dates)
+    rads = ["sas", "sas"]
+    plot_figure2(radars, dates, [6,5], rads, ["(a)", "(b)", "(c)", "(d)"], 211)
     return
 
 def create_RTI_figure():
@@ -364,4 +375,5 @@ if __name__ == "__main__":
     # create_RTI_figure()
     # compare_quiet_versus_event_day()
     # create_RTI_plot()
-    create_RTI_midl_figure()
+    # create_RTI_midl_figure()
+    create_RTI_SAS_figure_beams()

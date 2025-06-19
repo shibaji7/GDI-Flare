@@ -74,7 +74,7 @@ class RangeTimePlot(object):
         self._add_colorbar(im, ax, cmap, label=label)
         if overlay_sza:
             self.overlay_sza(
-                ax, df.time.unique(), beam, [0, np.max(df.gate)], 
+                ax, df.time.unique(), beam, [0, 75], 
                 df.rsep.iloc[0], df.frang.iloc[0], sza_th
             )
         return ax
@@ -83,6 +83,7 @@ class RangeTimePlot(object):
         R = 6378.1
         from pysolar.solar import get_altitude
         gates = np.arange(gate_range[0], gate_range[1])
+        print(self.fov[0].shape, gate_range, beam)
         SZA = np.zeros((len(times), len(gates)))
         for i, d in enumerate(times):
             d = d.to_pydatetime().replace(tzinfo=dt.timezone.utc)#dt.datetime.utcfromtimestamp(d.astype(dt.datetime) * 1e-9).replace(tzinfo=dt.timezone.utc)
