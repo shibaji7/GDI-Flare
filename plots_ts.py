@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 
-import mplstyle
+import scienceplots
+plt.style.use(["science", "ieee"])
 import matplotlib as mpl
 import pandas as pd
 

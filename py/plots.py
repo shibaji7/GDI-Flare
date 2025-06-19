@@ -146,7 +146,7 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     setsize(size)
     import matplotlib
     import numpy as np
-    fig = plt.figure(figsize=(8, 9), dpi=300)
+    fig = plt.figure(figsize=(8, 9), dpi=1000)
     ax = fig.add_subplot(311)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
     ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))

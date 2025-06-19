@@ -15,7 +15,8 @@ def get_data_for_radar(rad, dates, ):
     r = Radar(rad, dates)
     frame = r.df.copy()
     frame = frame[
-        (frame["sza"] <= 95.0)
+        (frame["time"] >= dates[0].replace(hour=11))
+        & (frame["time"] <= dates[0].replace(hour=13))
         & (np.abs(frame["v"]) >= 50.)
         & (np.abs(frame["v"]) <= 1000.)
         & (frame["gflg"]==0)
@@ -24,8 +25,7 @@ def get_data_for_radar(rad, dates, ):
     logger.info(f"Data for {rad} on {dates}:\n{frame.head()}")
     pa.plot_histograms(
         frame, column="v", bins=50,
-        title=f"Density: {rad} Velocity",
-        xlabel="Velocity, m/s", ylabel="Density/Frequency",
+        
         filename=f"figures/histogram_{rad}.png", abs_value=True,
         color="red", ls="-", lw=0.4,
     )
@@ -84,12 +84,12 @@ if __name__ == "__main__":
     dates = [
         dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
-    # get_data_for_radar(rad, dates)
-    check_events(dates)
+    get_data_for_radar(rad, dates)
+    # check_events(dates)
 
-    for d in range(90):
-        dates = [
-            dt.datetime(2017,7,1)+dt.timedelta(d),
-            dt.datetime(2017,7,1)+dt.timedelta(d+1),
-        ]
-        check_events(dates)
+    # for d in range(90):
+    #     dates = [
+    #         dt.datetime(2017,7,1)+dt.timedelta(d),
+    #         dt.datetime(2017,7,1)+dt.timedelta(d+1),
+    #     ]
+    #     check_events(dates)
