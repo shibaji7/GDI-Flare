@@ -11,6 +11,34 @@ import os
 from fetch import Radar
 import plots_analysis as pa
 
+def retset_frame(r, dates):
+    frame = r.df.copy()
+    frame = frame[
+        (frame["time"] >= dates[0].replace(hour=11))
+        & (frame["time"] <= dates[0].replace(hour=13))
+        & (np.abs(frame["v"]) >= 50.)
+        & (np.abs(frame["v"]) <= 1000.)
+        & (frame["gflg"]==0)
+    ]
+    frame["srange"] = frame["slist"] * 45 + 180
+    setattr(r, "frame", frame)
+    return r
+
+def plot_histograms(rad):
+    rSep = retset_frame(
+        Radar(rad, [dt.datetime(2017,9,6), dt.datetime(2017,9,7),]),
+        [dt.datetime(2017,9,6), dt.datetime(2017,9,7),]
+    )
+    rAug = retset_frame(
+        Radar(rad, [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]),
+        [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]
+    )
+    pa.plot_histograms_fig6(
+        rSep.frame, rAug.frame, bins=100,
+        filename=f"figures/histogram.png"
+    )
+    return
+
 def get_data_for_radar(rad, dates, ):
     r = Radar(rad, dates)
     frame = r.df.copy()
@@ -84,7 +112,7 @@ if __name__ == "__main__":
     dates = [
         dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
-    get_data_for_radar(rad, dates)
+    # get_data_for_radar(rad, dates)
     # check_events(dates)
 
     # for d in range(90):
@@ -93,3 +121,4 @@ if __name__ == "__main__":
     #         dt.datetime(2017,7,1)+dt.timedelta(d+1),
     #     ]
     #     check_events(dates)
+    plot_histograms(rad)
