@@ -12,6 +12,115 @@ import datetime as dt
 import numpy as np
 from scipy.ndimage import median_filter
 
+def plot_gps_figS4():
+    dSep = xr.load_dataset("database/gps170906g.003.nc")
+    cb = CartoBase(
+        dt.datetime(2017,9,6,11,50),                 
+        xPanels=1, yPanels=3,
+        basetag=0, ytitlehandle=0.95,
+        terminator=True,
+        range=[-130, -80, 20, 60],
+        title=""
+    )
+    cb._fetch_axis(True)
+    dates = [dt.datetime.utcfromtimestamp(d) for d in dSep["timestamps"].values]
+    gdlat, glon = (dSep["gdlat"].values, dSep["glon"].values)
+    tec = dSep["tec"].values
+    idate = dates.index(dt.datetime(2017, 9, 6, 11, 50))
+    T = tec[idate, :, :]
+    dyT = np.gradient(T, axis=1)
+    glon, gdlat = np.meshgrid(glon, gdlat)
+    xyz = cb.proj["to"].transform_points(cb.proj["from"], glon, gdlat)
+    x, y = xyz[:, :, 0], xyz[:, :, 1]
+    
+    cb.ax.pcolor(
+        x, y, T,
+        cmap="Spectral",
+        vmin=0,
+        vmax=8,
+        transform=cb.proj["to"],
+        alpha=0.8
+    )
+    cb.ax.scatter(x, y, color="k", s=1e-3)
+    ql = cb.ax.quiver(
+        x,
+        y,
+        median_filter(dyT, size=3, mode="constant", cval=np.nan), 
+        np.zeros_like(dyT),
+        scale=4,
+        headaxislength=0,
+        linewidth=0.6,
+        scale_units="inches",
+    )
+    cb.ax.quiverkey(
+        ql,
+        0.9,
+        1.1,
+        0.5,
+        r"$\nabla_{\phi}n'_0$:"+str(3),
+        labelpos="N",
+        transform=cb.proj["from"],
+        color="k",
+        fontproperties={"size": 8},
+    )
+    cb.ax.text(
+        -0.2, 0.95, "Coord: Geo", 
+        ha="left", va="top", transform=cb.ax.transAxes,
+        fontdict={"size":10, "weight":"bold", "color": "b"},
+        rotation=90,
+    )
+    cb.ax.text(
+        -0.1, 1.15, "11:50 UT, 06 September 2017", 
+        ha="left", va="bottom", transform=cb.ax.transAxes,
+        fontdict={"size":10, "weight":"bold", "color": "b"},
+    )
+
+    cb.ax = cb._add_axis(False)
+    cb.ax.pcolor(
+        x, y, T,
+        cmap="Spectral",
+        vmin=0,
+        vmax=8,
+        transform=cb.proj["to"],
+        alpha=0.8
+    )
+    ql = cb.ax.quiver(
+        x,
+        y,
+        median_filter(dyT, size=7, mode="constant", cval=np.nan),
+        np.zeros_like(dyT),
+        scale=4,
+        headaxislength=0,
+        linewidth=0.6,
+        scale_units="inches",
+    )
+
+    cb.ax = cb._add_axis(False)
+    im = cb.ax.pcolor(
+        x, y, T,
+        cmap="Spectral",
+        vmin=0,
+        vmax=8,
+        transform=cb.proj["to"],
+        alpha=0.8
+    )
+    cb._add_colorbar(im, "Spectral", label="TEC [TECu]", dx=0.02)
+    ql = cb.ax.quiver(
+        x,
+        y,
+        median_filter(dyT, size=11, mode="constant", cval=np.nan), 
+        np.zeros_like(dyT),
+        scale=4,
+        headaxislength=0,
+        linewidth=0.6,
+        scale_units="inches",
+    )
+
+
+    cb.save("figures/FigureS04.png")
+    cb.close()
+    return
+
 def plot_gps_fig3():
     dSep = xr.load_dataset("database/gps170906g.003.nc")
     cb = CartoBase(
@@ -83,5 +192,6 @@ def plot_gps_fig6():
     return
 
 if __name__ == "__main__":
-    plot_gps_fig3()
-    plot_gps_fig6()
+    # plot_gps_fig3()
+    # plot_gps_fig6()
+    plot_gps_figS4()

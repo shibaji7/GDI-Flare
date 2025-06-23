@@ -35,7 +35,7 @@ def plot_histograms(rad):
     )
     pa.plot_histograms_fig6(
         rSep.frame, rAug.frame, bins=100,
-        filename=f"figures/histogram.png"
+        filename=f"figures/Figure06.png"
     )
     return
 
