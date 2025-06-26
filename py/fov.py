@@ -188,6 +188,6 @@ def plot_fov():
     )
     cb.add_radars(radars, beamLimits=[7, 7, 10], draw_labels=True)
     cb.add_circle(60, -105, width=3, height=3) 
-    cb.save(f"figures/fov.png")
+    cb.save(f"figures/Figure02.png")
     return
 plot_fov()

@@ -179,7 +179,7 @@ def create_RTI_figure():
     for rad in rads:
         radars[rad] = Radar(rad, dates)
     
-    plot_figure2(radars, dates, rads)
+    plot_figure2(radars, dates, [7, 7, 10], rads, fname="figures/Figure05.png")
     return
     
 def create_GPS_error_list():
@@ -372,8 +372,8 @@ if __name__ == "__main__":
     #     create_elev_angle_analysis(rad, tdiff*1e-3, b)
         
     # create_GPS_error_list()
-    # create_RTI_figure()
+    create_RTI_figure()
     # compare_quiet_versus_event_day()
-    # create_RTI_plot()
+    create_RTI_plot()
     # create_RTI_midl_figure()
     create_RTI_SAS_figure_beams()

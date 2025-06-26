@@ -17,7 +17,7 @@ from sunpy.net import attrs as a # type: ignore
 from plots import create_eiscat_line_plot
 import utils
 
-os.environ["OMNIDATA_PATH"] = "/home/shibaji/OMNI/"
+os.environ["OMNIDATA_PATH"] = "/home/chakras4/OMNI/"
 
 class SolarDataset(object):
     """

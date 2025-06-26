@@ -47,6 +47,8 @@ class RangeTimePlot(object):
              ylabel="Range gate", zparam="v", label="Velocity (m/s)", add_gflg=False, sza_th=108,
              cmap = plt.cm.jet_r, ax=None, overlay_sza=True):
         ax = ax if ax else self._add_axis()
+        print(beam, df.bmnum.unique(), beam)
+        
         df = df[df.bmnum==beam]
         X, Y, Z = get_gridded_parameters(df, xparam="time", yparam="slist", zparam=zparam)
         # cmap.set_bad("w", alpha=0.0)

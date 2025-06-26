@@ -24,17 +24,33 @@ def retset_frame(r, dates):
     setattr(r, "frame", frame)
     return r
 
+def get_rAug(rad):
+    import glob
+    files = glob.glob(f"dataset/201708*{rad}.fitacf.csv")
+    files.sort()
+    dates = [dt.datetime.strptime(f.split("/")[-1].split(".")[0], "%Y%m%d") for f in files]
+    print(f"Files found: {files}, dates: {dates}")
+    rAug = pd.concat([
+        retset_frame(
+            Radar(rad, [d, d+dt.timedelta(1)], type="fitacf"),
+            [d, d+dt.timedelta(1)]
+        ).frame
+        for d in dates
+    ])
+    return rAug
+
 def plot_histograms(rad):
     rSep = retset_frame(
         Radar(rad, [dt.datetime(2017,9,6), dt.datetime(2017,9,7),]),
         [dt.datetime(2017,9,6), dt.datetime(2017,9,7),]
     )
-    rAug = retset_frame(
-        Radar(rad, [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]),
-        [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]
-    )
+    rAugFrame = get_rAug("sas")
+    # rAug = retset_frame(
+    #     Radar(rad, [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]),
+    #     [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]
+    # )
     pa.plot_histograms_fig6(
-        rSep.frame, rAug.frame, bins=100,
+        rSep.frame, rAugFrame, bins=100,
         filename=f"figures/Figure06.png"
     )
     return

@@ -249,7 +249,11 @@ def setsize(size=12):
     return
 
 
-def plot_figure2(radars, dates, beams = [7, 7, 10], rads=["sas","pgr","kod"], tags=["(a)", "(b)", "(c)"], ids=311):
+def plot_figure2(
+    radars, dates, beams = [7, 7, 10], rads=["sas","pgr","kod"], 
+    tags=["(a)", "(b)", "(c)"], ids=311,
+    fname="figures/IS_RTI.png",
+):
     import numpy as np
     from rti import RangeTimePlot
     setsize(12)
@@ -273,6 +277,7 @@ def plot_figure2(radars, dates, beams = [7, 7, 10], rads=["sas","pgr","kod"], ta
         )
         o["unique_tfreq"] = o.tfreq.apply(lambda x: int(x/0.5)*0.5)
         o = o[o.unique_tfreq.isin([10.5])]
+        print(o.head())
         ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
         ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
         ax.text(0.01,0.9,tags[i] +"\t"+ rad.upper() + fr" / {beams[i]} / $f_0\sim$10.5 MHz",ha="left",va="center",transform=ax.transAxes,)
@@ -283,5 +288,5 @@ def plot_figure2(radars, dates, beams = [7, 7, 10], rads=["sas","pgr","kod"], ta
         ax.axvline(dt.datetime(2017, 9, 6, 12, 2), color="k", ls="-", lw=1.2, label="12:02 UT")
         ax.xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 1)))
     ax.set_xlabel("Time (UT)")
-    fig.savefig("figures/IS_RTI.png", bbox_inches="tight")
+    fig.savefig(fname, bbox_inches="tight")
     return
