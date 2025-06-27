@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-import mplstyle
+#import mplstyle
+import scienceplots
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Tahoma", "DejaVu Sans",
                                    "Lucida Grande", "Verdana"]
@@ -493,7 +494,7 @@ def plot_fov_data(month, day, file, plot_cicle=False, ini_tag=0):
         #     cb.add_circle(60, -105, width=8, height=5)
         cb.save(f"figures/fov_data.%s.png"%d.strftime("%d%H%M"))
     return
-# plot_fov_data(9, 6, "database/gps170906g.003.txt.gz", False)
+plot_fov_data(9, 6, "database/gps170906g.003.txt.gz", False)
 # plot_fov_data(8, 30, "database/gps170830g.002.txt.gz", True, 2)
 
 # plot_difference(

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-import mplstyle
+import scienceplots
+#import mplstyle
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Tahoma", "DejaVu Sans",
                                    "Lucida Grande", "Verdana"]

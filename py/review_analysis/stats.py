@@ -21,6 +21,7 @@ def retset_frame(r, dates):
         & (frame["gflg"]==0)
     ]
     frame["srange"] = frame["slist"] * 45 + 180
+    frame = frame[frame["srange"] >= 180 + 45 * 7]
     setattr(r, "frame", frame)
     return r
 
