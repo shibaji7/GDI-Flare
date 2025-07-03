@@ -28,7 +28,7 @@ def save_dataset(rad, dates):
     frame = frame[
         (frame["time"] >= dates[0].replace(hour=11))
         & (frame["time"] <= dates[0].replace(hour=13))
-        & (np.abs(frame["v"]) >= 50.)
+        & (np.abs(frame["v"]/frame["v_e"]) <= 0.7)
         & (np.abs(frame["v"]) <= 1000.)
         & (frame["gflg"] == 0)
     ]

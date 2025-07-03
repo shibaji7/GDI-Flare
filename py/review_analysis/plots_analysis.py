@@ -66,7 +66,7 @@ def plot_histograms(
 def add_histogram(
     x, y, ax, fig, cbar=False, bins:int=500, 
     title="", xlabel="", ylabel="", txt="",  xline=None, yline=None,
-    xline_locs=None, yline_locs=None,
+    xline_locs=None, yline_locs=None, ylims=None, xlims=None,
 ):
     hist, xedges, yedges = np.histogram2d(x, y, bins=bins, density=True)
     hist_smooth = gaussian_filter(hist, sigma=1.0)
@@ -80,6 +80,8 @@ def add_histogram(
         #levels=5, 
         #clim=[vmin, vmax]  # Set color limits for the contour fill
     )
+    ax.set_xlim(xlims if xlims else (xedges[0], xedges[-1]))
+    ax.set_ylim(ylims if ylims else (yedges[0], yedges[-1]))
     if cbar:
         pos = ax.get_position()
         cpos = [pos.x1 + pos.width * 0.3, pos.y0 + pos.height*.1,
@@ -131,7 +133,7 @@ def plot_histograms_fig6(
         ylabel=r"Velocity ($|v|$), m/s", xlabel=r"$log_{10}\tau_l$, $s^{-1}$",
         txt="(a) 06 September 2017", xline=1.5, yline=400, 
         xline_locs=(1.7, 700, 90, fr"$\tau_l$ = {np.round(10**1.5, 2)} s$^{-1}$"),
-        yline_locs=(3.5, 450, 0, r"$|v|$ = 400 m/s"),
+        yline_locs=(3.5, 450, 0, r"$|v|$ = 400 m/s"), xlims=(1.2, 3.5), ylims=(0, 600),
     )
     # Velocity/range histogram
     add_histogram(
@@ -140,7 +142,7 @@ def plot_histograms_fig6(
         ylabel=r"Velocity ($|v|$), m/s", xlabel=r"$log_{10}S_r$, km",
         txt="(b)", xline=3.22, yline=400, 
         xline_locs=(3.25, 700, 90, fr"$S_r$ = {np.round(10**3.22, 2)} km"),
-        yline_locs=(2.5, 450, 0, r"$|v|$ = 400 m/s"),
+        yline_locs=(2.5, 450, 0, r"$|v|$ = 400 m/s"), xlims=(1.2, 3.5), ylims=(0, 600),
     )
     # # Range/tau histogram
     # add_histogram(
@@ -158,14 +160,14 @@ def plot_histograms_fig6(
         np.log10(dfaug["tau_l"]), dfaug["v"].abs(), axes[2], fig, cbar=False, bins=bins,
         title="",
         ylabel=r"Velocity ($|v|$), m/s", xlabel=r"$log_{10}\tau_l$, $s^{-1}$",
-        txt="(c) August 2017"
+        txt="(c) August 2017", xlims=(1.2, 3.5), ylims=(0, 600),
     )
     # Velocity/range histogram
     add_histogram(
         np.log10(dfaug["srange"]), dfaug["v"].abs(), axes[3], fig, cbar=True, bins=bins,
         title="",
         ylabel=r"Velocity ($|v|$), m/s", xlabel=r"$log_{10}S_r$, km",
-        txt="(d)"
+        txt="(d)", xlims=(1.2, 3.5), ylims=(0, 600),
     )
     # # Range/tau histogram
     # add_histogram(

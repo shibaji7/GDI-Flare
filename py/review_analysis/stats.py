@@ -26,18 +26,31 @@ def retset_frame(r, dates):
     return r
 
 def get_rAug(rad):
+    runs = pd.read_csv("dataset/dates.csv", parse_dates=["dates"])
     import glob
     files = glob.glob(f"dataset/201708*{rad}.fitacf.csv")
     files.sort()
     dates = [dt.datetime.strptime(f.split("/")[-1].split(".")[0], "%Y%m%d") for f in files]
+    dates.sort()
     print(f"Files found: {files}, dates: {dates}")
-    rAug = pd.concat([
-        retset_frame(
-            Radar(rad, [d, d+dt.timedelta(1)], type="fitacf"),
-            [d, d+dt.timedelta(1)]
-        ).frame
-        for d in dates
-    ])
+    rAug = []
+    for i, d in runs.iterrows():
+        if d.quiet:
+            rAug.append(
+                retset_frame(
+                    Radar(rad, [d.dates, d.dates+dt.timedelta(1)], type="fitacf"),
+                    [d.dates, d.dates+dt.timedelta(1)]
+                ).frame
+            )
+            break
+    # rAug = pd.concat([
+    #     retset_frame(
+    #         Radar(rad, [d, d+dt.timedelta(1)], type="fitacf"),
+    #         [d, d+dt.timedelta(1)]
+    #     ).frame
+    #     for d in dates
+    # ])
+    rAug = pd.concat(rAug)
     return rAug
 
 def plot_histograms(rad):
