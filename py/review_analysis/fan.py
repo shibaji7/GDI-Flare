@@ -71,7 +71,7 @@ class Fan(object):
         self.date = date
         self.nrows, self.ncols = nrows, ncols
         self._num_subplots_created = 0
-        self.fig = plt.figure(figsize=(3 * ncols, 2.5 * nrows), dpi=300)
+        self.fig = plt.figure(figsize=(3 * ncols, 2.5 * nrows), dpi=1000)
         self.coord = coord
         self.central_longitude = central_longitude
         self.central_latitude = central_latitude
@@ -89,7 +89,7 @@ class Fan(object):
                 fontweight="bold",
                 fontsize=8,
             )
-        setsize(12)
+        setsize(8)
         return
 
     def add_axes(self, add_coords=True, add_time=False):
@@ -98,12 +98,12 @@ class Fan(object):
         """
         from sd_carto import SDCarto
         self._num_subplots_created += 1
-        proj = cartopy.crs.SouthPolarStereo(central_longitude=self.central_longitude)
-        # proj = cartopy.crs.Stereographic(
-        #     central_longitude=self.central_longitude, 
-        #     central_latitude=self.central_latitude
-        # )
-        # proj = cartopy.crs.PlateCarree(central_longitude=-90.0)
+        # proj = cartopy.crs.SouthPolarStereo(central_longitude=self.central_longitude)
+        proj = cartopy.crs.Stereographic(
+            central_longitude=self.central_longitude, 
+            central_latitude=self.central_latitude
+        )
+        # proj = cartopy.crs.PlateCarree(central_longitude=self.central_longitude)
         ax = self.fig.add_subplot(
             100 * self.nrows + 10 * self.ncols + self._num_subplots_created,
             projection="SDCarto",
@@ -152,9 +152,37 @@ class Fan(object):
                 transform=ax.transAxes,
                 fontsize="xx-small",
             )
-        # ax.overaly_eclipse_path(lineWidth=0.2)
-        # ax.overlay_eclipse(self.cb)
+        self.overaly_nightshade(ax)
         return ax
+
+    def overaly_nightshade(self, ax=None):
+        ax = ax if ax else self.add_axes()
+        from pysolar.solar import get_altitude
+        lats = np.arange(0, 90, 0.25)
+        lons = np.arange(-180, 0, 0.25)
+        sza = np.full((len(lats), len(lons)), np.nan)
+        for i, lat in enumerate(lats):
+            for j, lon in enumerate(lons):
+                sza[i, j] = (
+                    90 - get_altitude(
+                        lat, lon,
+                        self.date.replace(tzinfo=dt.timezone.utc),
+                        elevation=0
+                    )
+                )
+        # Mask day (SZA < 90), keep night (SZA >= 90)
+        night_mask = sza >= 90
+        Z = np.zeros_like(sza)*np.nan
+        Z[night_mask] = 1
+        Lon, Lat = np.meshgrid(lons, lats)
+        XYZ = self.proj.transform_points(self.geo, Lon, Lat)
+        Z = np.ma.masked_invalid(Z)
+        ax.pcolor(
+            XYZ[:, :, 0], XYZ[:, :, 1], Z,
+            transform=self.proj, cmap="gray_r",
+            vmin=0, vmax=1, zorder=2, alpha=0.2
+        )
+        return
 
     def date_string(self, label_style="web"):
         # Set the date and time formats
@@ -190,6 +218,19 @@ class Fan(object):
             ]
         ax.overlay_eclipse(eclipse_cb)
         return
+
+    def add_circle(self, ax, lat, lon, width=3, height=3):
+        from matplotlib.patches import Circle, Ellipse, Rectangle
+        width = width / np.cos(np.deg2rad(lat))
+        ax.add_patch(Rectangle(
+            xy=[lon-width/2, lat-height/2], width=width, height=height,
+            color='red', alpha=0.3, 
+            transform=self.proj, zorder=30
+        ))
+        ax.scatter([lon], [lat], s=2, marker="o",
+            color="red", zorder=3, transform=self.proj, lw=0.8, alpha=0.4)
+        return
+
 
     def generate_fovs(self, fds, beams=[], laytec=False):
         """

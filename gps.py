@@ -169,7 +169,7 @@ class GPS1X1(GPS):
             }
             o.to_csv(self.raw_file, index=False, header=True)
         print(self.frames[self.__fetch_key__(0)])
-        logger.info(f"File cotent header:\n {self.frames[self.__fetch_key__(0)].head()}")
+        # logger.info(f"File cotent header:\n {self.frames[self.__fetch_key__(0)].head()}")
         return
     
     def summary(

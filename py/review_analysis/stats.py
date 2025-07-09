@@ -16,7 +16,7 @@ def retset_frame(r, dates):
     frame = frame[
         (frame["time"] >= dates[0].replace(hour=11))
         & (frame["time"] <= dates[0].replace(hour=13))
-        & (np.abs(frame["v"]) >= 50.)
+        # & (np.abs(frame["v"])>=50)
         & (np.abs(frame["v"]) <= 1000.)
         & (frame["gflg"]==0)
     ]
@@ -35,21 +35,16 @@ def get_rAug(rad):
     print(f"Files found: {files}, dates: {dates}")
     rAug = []
     for i, d in runs.iterrows():
-        if d.quiet:
-            rAug.append(
-                retset_frame(
-                    Radar(rad, [d.dates, d.dates+dt.timedelta(1)], type="fitacf"),
-                    [d.dates, d.dates+dt.timedelta(1)]
-                ).frame
-            )
-            break
-    # rAug = pd.concat([
-    #     retset_frame(
-    #         Radar(rad, [d, d+dt.timedelta(1)], type="fitacf"),
-    #         [d, d+dt.timedelta(1)]
-    #     ).frame
-    #     for d in dates
-    # ])
+        if d.run:
+            try:
+                rAug.append(
+                    retset_frame(
+                        Radar(rad, [d.dates, d.dates+dt.timedelta(1)], type="fitacf"),
+                        [d.dates, d.dates+dt.timedelta(1)]
+                    ).frame
+                )
+            except Exception as e:
+                logger.error(f"Error processing {d.dates}: {e}")
     rAug = pd.concat(rAug)
     return rAug
 
@@ -63,10 +58,16 @@ def plot_histograms(rad):
     #     Radar(rad, [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]),
     #     [dt.datetime(2017,8,30), dt.datetime(2017,8,31),]
     # )
-    pa.plot_histograms_fig6(
+    
+    # Create a 2 by 1 grid of subplots with overlaied on the data from 9/6/2017
+    pa.plot_histograms_fig06(
         rSep.frame, rAugFrame, bins=100,
         filename=f"figures/Figure06.png"
     )
+    # pa.plot_histograms_fig6(
+    #     rSep.frame, rAugFrame, bins=100,
+    #     filename=f"figures/Figure06.png"
+    # )
     return
 
 def get_data_for_radar(rad, dates, ):

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import scienceplots
+plt.style.use(["science", "ieee"])
 plt.rcParams["font.family"] = "sans-serif"
 plt.rcParams["font.sans-serif"] = ["Tahoma", "DejaVu Sans",
                                    "Lucida Grande", "Verdana"]
@@ -23,8 +24,8 @@ def to_datetime(date):
 
 
 def plot_TEC_TS():
-    mpl.rcParams.update({"xtick.labelsize": 15, "ytick.labelsize":15, "font.size":15})
-    fig = plt.figure(figsize=(8, 12), dpi=200)
+    mpl.rcParams.update({"xtick.labelsize": 12, "ytick.labelsize":12, "font.size":12})
+    fig = plt.figure(figsize=(8, 12), dpi=1000)
     axes = [fig.add_subplot(511+i) for i in range(4)]
     labels = ["(a)","(b)","(c)","(d)","(e)"]
     for i,ax in enumerate(axes):
@@ -94,7 +95,7 @@ def plot_lines():
         "TXT.GZ"
     )
     g2 = GPS1X1(
-        "database/gps170830g.002.txt.gz", 
+        "database/gps170830g.003.txt.gz", 
         "TXT.GZ"
     )
     dates=[
@@ -232,7 +233,7 @@ def plot_lines():
     ax.set_ylim(-10, 120)
 
     fig.subplots_adjust(hspace=0.2, wspace=0.2)
-    fig.savefig(f"figures/TS.png", bbox_inches="tight")
+    fig.savefig(f"figures/Figure09.png", bbox_inches="tight")
     return
 
 import os

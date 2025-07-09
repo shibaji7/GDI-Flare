@@ -518,8 +518,8 @@ if __name__ == "__main__":
         dt.datetime(2017,9,6), dt.datetime(2017,9,7),
     ]
     # GPS1deg(dates)
-    # Eiscat(dates)
-    # Radar("sas", dates, type="fitacf")
+    Eiscat(dates)
+    Radar("sas", dates, type="fitacf")
     # Radar("kod", dates)
     # Radar("pgr", dates)
     # SolarDataset(dates)
@@ -537,8 +537,8 @@ if __name__ == "__main__":
     #     ]
     #     Radar("sas", dates, type="fitacf")
 
-    Radar("cve", dates, type="fitacf3")
-    Radar("cvw", dates, type="fitacf3")
-    Radar("fhe", dates, type="fitacf3")
-    Radar("fhw", dates, type="fitacf3")
-    Radar("bks", dates, type="fitacf3")
+    # Radar("cve", dates, type="fitacf3")
+    # Radar("cvw", dates, type="fitacf3")
+    # Radar("fhe", dates, type="fitacf3")
+    # Radar("fhw", dates, type="fitacf3")
+    # Radar("bks", dates, type="fitacf3")

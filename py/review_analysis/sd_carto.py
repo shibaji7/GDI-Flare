@@ -43,6 +43,23 @@ RedBlackBlue = LinearSegmentedColormap.from_list(
 
 from scipy.interpolate import griddata
 
+def setsize(size=12):
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import scienceplots
+#    import mplstyle
+    plt.rcParams["font.family"] = "sans-serif"
+    plt.rcParams["font.sans-serif"] = [
+        "Tahoma",
+        "DejaVu Sans",
+        "Lucida Grande",
+        "Verdana",
+    ]
+    mpl.rcParams.update(
+        {"xtick.labelsize": size, "ytick.labelsize": size, "font.size": size}
+    )
+    return
+
 def smooth_2d_interpolate(glon, glat, of, grid_size=360, method='cubic'):
     """
     Interpolates and smooths a 2D array with possible NaNs using 1D longitude and latitude arrays.
@@ -593,13 +610,13 @@ class SDCarto(GeoAxes):
         """
         Add a colorbar to the right of an axis.
         """
-        utils.setsize(10)
+        setsize(8)
         fig = self.get_figure()
         cpos = [1.04, 0.1, 0.025, 0.8]
         cax = self.inset_axes(cpos, transform=self.transAxes)
         cb = fig.colorbar(im, ax=self, cax=cax)
         cb.set_label(label)
-        utils.setsize(12)
+        setsize(8)
         return
 
     def overlay_tec(
@@ -656,6 +673,7 @@ class SDCarto(GeoAxes):
         cb.set_label(label)
         return
 
+    
 
 # Now register the projection with matplotlib so the user can select
 # it.
