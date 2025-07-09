@@ -158,8 +158,8 @@ class Fan(object):
     def overaly_nightshade(self, ax=None):
         ax = ax if ax else self.add_axes()
         from pysolar.solar import get_altitude
-        lats = np.arange(0, 90, 0.25)
-        lons = np.arange(-180, 0, 0.25)
+        lats = np.arange(0, 90, 1)
+        lons = np.arange(-180, 0, 1)
         sza = np.full((len(lats), len(lons)), np.nan)
         for i, lat in enumerate(lats):
             for j, lon in enumerate(lons):

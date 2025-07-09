@@ -257,6 +257,14 @@ def get_data_for_date(
 
 def plot_gps_fig7():
     radar, dSep = get_data_for_date()
+    radarA, dAug = get_data_for_date(
+        dates=[
+            dt.datetime(2017,8,30,11),
+            dt.datetime(2017,9,30,17)
+        ],
+        tec_file="database/gps170830g.003.nc"
+    )
+    
     f = Fan(
         ["sas"],
         dt.datetime(2017, 9, 6, 11, 50),
@@ -264,28 +272,90 @@ def plot_gps_fig7():
         nrows=2, ncols=2,
         coord="geo",
         central_longitude=-100.0, central_latitude=40.0,
-        extent=[-130, -60, 20, 80],
-        plt_lats=np.arange(20, 80, 10),
+        extent=[-130, -70, 50, 80],
+        plt_lats=np.arange(50, 80, 10),
         sup_title=False, mark_lon=-100
     )
-    ax = f.add_axes(True, True)
-    f.add_circle(ax, 60, -105, width=3, height=3)
+
+    ax = f.add_axes()
+    # f.add_circle(ax, 60, -105, width=3, height=3)
     d = dSep.to_dataframe().reset_index()
     d["time"] = d.timestamps.apply(lambda x: dt.datetime.utcfromtimestamp(x))
     du = d[d.time==dt.datetime(2017, 9, 6, 11, 50)]
     g = Gardient(du, dlat=3, dlon=3)
     g.parse_matrix()
     g.grad2D_by_np()
-    g.lay_plot(f, ax, add_q=True)
+    g.lay_plot(f, ax, add_q=True,length=0.25)
+    ax.overlay_fov("sas", lineColor="k")
+    ax.overlay_radar("sas")
+    o = radar.df.copy()
+    o = o[
+        (o.time>=dt.datetime(2017,9,6,11,50))
+        & (o.time<=dt.datetime(2017,9,6,11,52))
+    ]
+    ax.overlay_data("sas", o, f.proj, cmap="Spectral", p_min=-500, p_max=500)
+    ax.text(0.05, 0.95, "(a) 11:52 - 11:54 UT", transform=ax.transAxes, fontsize=8)
+    ax.text(0.05, 1.1, "06 Sep 2017", transform=ax.transAxes, fontsize=10, fontweight="bold")
 
-    radar, dSep = get_data_for_date(
-        dates=[
-            dt.datetime(2017,8,30,11),
-            dt.datetime(2017,9,30,17)
-        ]
-    )
+    ax = f.add_axes(False, False)
+    # f.add_circle(ax, 60, -105, width=3, height=3)
+    d = dAug.to_dataframe().reset_index()
+    d["time"] = d.timestamps.apply(lambda x: dt.datetime.utcfromtimestamp(x))
+    du = d[d.time==dt.datetime(2017, 8, 30, 11, 50)]
+    g = Gardient(du, dlat=3, dlon=3)
+    g.parse_matrix()
+    g.grad2D_by_np()
+    g.lay_plot(f, ax, add_q=False,length=0.25, scale=2)
+    ax.overlay_fov("sas", lineColor="k")
+    ax.overlay_radar("sas")
+    o = radarA.df.copy()
+    o = o[
+        (o.time>=dt.datetime(2017,8,30,11,50))
+        & (o.time<=dt.datetime(2017,8,30,11,52))
+    ]
+    ax.overlay_data("sas", o, f.proj, cmap="Spectral", p_min=-500, p_max=500, cbar=True)
+    ax.text(0.05, 0.95, "(b) 11:52 - 11:54 UT", transform=ax.transAxes, fontsize=8)
+    ax.text(0.05, 1.1, "30 Aug 2017", transform=ax.transAxes, fontsize=10, fontweight="bold")
 
-    f.fig.savefig("figures/Figure07.png")
+    ax = f.add_axes(False, False)
+    # f.add_circle(ax, 60, -105, width=3, height=3)
+    d = dSep.to_dataframe().reset_index()
+    d["time"] = d.timestamps.apply(lambda x: dt.datetime.utcfromtimestamp(x))
+    du = d[d.time==dt.datetime(2017, 9, 6, 12, 20)]
+    g = Gardient(du, dlat=3, dlon=3)
+    g.parse_matrix()
+    g.grad2D_by_np()
+    g.lay_plot(f, ax, add_q=False,length=0.25, scale=1)
+    ax.overlay_fov("sas", lineColor="k")
+    ax.overlay_radar("sas")
+    o = radar.df.copy()
+    o = o[
+        (o.time>=dt.datetime(2017,9,6,12,20))
+        & (o.time<=dt.datetime(2017,9,6,12,22))
+    ]
+    ax.overlay_data("sas", o, f.proj, cmap="Spectral", p_min=-500, p_max=500)
+    ax.text(0.05, 0.95, "(c) 12:22 - 12:24 UT", transform=ax.transAxes, fontsize=8)
+
+    ax = f.add_axes(False, False)
+    # f.add_circle(ax, 60, -105, width=3, height=3)
+    d = dAug.to_dataframe().reset_index()
+    d["time"] = d.timestamps.apply(lambda x: dt.datetime.utcfromtimestamp(x))
+    du = d[d.time==dt.datetime(2017, 8, 30, 12, 20)]
+    g = Gardient(du, dlat=3, dlon=3)
+    g.parse_matrix()
+    g.grad2D_by_np()
+    g.lay_plot(f, ax, add_q=False,length=0.25, scale=2)
+    ax.overlay_fov("sas", lineColor="k")
+    ax.overlay_radar("sas")
+    o = radarA.df.copy()
+    o = o[
+        (o.time>=dt.datetime(2017,8,30,12,20))
+        & (o.time<=dt.datetime(2017,8,30,12,22))
+    ]
+    ax.overlay_data("sas", o, f.proj, cmap="Spectral", p_min=-500, p_max=500)
+    ax.text(0.05, 0.95, "(d) 12:22 - 12:24 UT", transform=ax.transAxes, fontsize=8)
+
+    f.fig.savefig("figures/Figure08.png")
     f.close()
     return
 

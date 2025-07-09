@@ -33,9 +33,9 @@ RedBlackBlue = LinearSegmentedColormap.from_list(
     "RedBlackBlue",
     [
                 (0.0, "#FF0000"),  # reddish
-                (0.25,"#EF8787"),  # reddish
-                (0.5, "#F8F8F8"),  # black
-                (0.75, "#7076E0E8"),  # black
+                (0.25, "#8B0000"),  # blackish red
+                (0.5, "#000000"),  # black
+                (0.75, "#00008B"),  # blackish blue
                 (1.0, "#131DE3E8"),  # black
             ],
 )
@@ -59,6 +59,78 @@ def setsize(size=12):
         {"xtick.labelsize": size, "ytick.labelsize": size, "font.size": size}
     )
     return
+
+
+def get_gridded_parameters(q, xparam="time", yparam="slist", zparam="v", round=False, a_filter=True):
+    """
+    Method converts scans to "beam" and "slist" or gate
+    """
+    plotParamDF = q[ [xparam, yparam, zparam] ]
+    if round:
+        plotParamDF[xparam] = np.round(plotParamDF[xparam], 2)
+        plotParamDF[yparam] = np.round(plotParamDF[yparam], 2)
+    plotParamDF = plotParamDF.groupby( [xparam, yparam] ).mean().reset_index()
+    plotParamDF = plotParamDF[ [xparam, yparam, zparam] ].pivot(index=xparam, columns=yparam )
+    x = plotParamDF.index.values
+    y = plotParamDF.columns.levels[1].values
+    X, Y  = np.meshgrid( x, y )
+    # Mask the nan values! pcolormesh can't handle them well!
+    Z = np.ma.masked_where(
+            np.isnan(plotParamDF[zparam].values),
+            plotParamDF[zparam].values)
+    if a_filter:
+        Z = apply_2d_filter(Z)
+    return X,Y,Z
+
+def apply_2d_filter(data, weights=np.array([[1,2,1],[2,5,2],[1,2,1]])):
+    """
+    Apply a 2D filter with a 3x3 weight matrix, rejecting a cell if 
+    at least 4 cells in the 3x3 neighborhood are masked.
+
+    Parameters:
+    - data: 2D numpy masked array
+    - weights: 3x3 numpy array (weight matrix)
+
+    Returns:
+    - filtered_data: 2D numpy masked array with the filter applied
+    """
+    # Ensure the input is a masked array
+    filtered_data = np.ma.empty_like(data)
+
+    rows, cols = data.shape
+    kernel_size = 3
+    offset = kernel_size // 2
+
+    for i in range(rows):
+        for j in range(cols):
+            # Extract the 3x3 neighborhood
+            r_start, r_end = max(0, i - offset), min(rows, i + offset + 1)
+            c_start, c_end = max(0, j - offset), min(cols, j + offset + 1)
+            neighborhood = data[r_start:r_end, c_start:c_end]
+
+            # Check if enough cells are covered
+            if np.ma.count(neighborhood) >= 5:  # At least 5 valid cells
+                valid_weights = weights[:neighborhood.shape[0], :neighborhood.shape[1]]
+                # print(valid_weights)
+                # filtered_value = np.sum(neighborhood * valid_weights) / np.sum(valid_weights)
+                filtered_data[i, j] = weighted_median(neighborhood.ravel(),  valid_weights.ravel())
+            else:
+                # Mask the cell if less than 5 valid cells
+                filtered_data[i, j] = np.ma.masked
+
+    return filtered_data
+
+def weighted_median(data, weights):
+    sorted_indices = np.argsort(data)
+    sorted_data = data[sorted_indices]
+    sorted_weights = weights[sorted_indices]
+    cum_weights = np.cumsum(sorted_weights)
+    median_index = np.searchsorted(cum_weights, 0.5 * cum_weights[-1])
+    # Calculate the weighted median
+    if cum_weights[median_index - 1] == 0.5 * cum_weights[-1]:
+        return 0.5 * (sorted_data[median_index - 1] + sorted_data[median_index])
+    else:
+        return sorted_data[median_index]
 
 def smooth_2d_interpolate(glon, glat, of, grid_size=360, method='cubic'):
     """
@@ -542,12 +614,12 @@ class SDCarto(GeoAxes):
         df,
         tx,
         fm=cartopy.crs.Geodetic(),
-        p_max=33,
-        p_min=0,
-        p_name="p_l",
-        label="Power [dB]",
+        p_max=300,
+        p_min=-300,
+        p_name="v",
+        label="Velovcit, m/s",
         cmap=RedBlackBlue,
-        cbar=True,
+        cbar=False,
         maxGate=None,
         scan_time=None,
         model="IS",
@@ -567,7 +639,7 @@ class SDCarto(GeoAxes):
             lats, lons = pydarn.Coords.GEOGRAPHIC(hdw.stid, center=True)
             print(lats.shape, lons.shape)
             lats, lons = lats.T, lons.T
-            Xb, Yg, Px = utils.get_gridded_parameters(
+            Xb, Yg, Px = get_gridded_parameters(
                 df, xparam="bmnum", yparam="slist", zparam=p_name
             )
             Xb, Yg = Xb.astype(int), Yg.astype(int)
@@ -578,30 +650,30 @@ class SDCarto(GeoAxes):
             XYZ = tx.transform_points(fm, lons, lats)
             Px = np.ma.masked_invalid(Px)
             print(XYZ.shape, Px.shape)
-            im = self.scatter(
-                XYZ[:, :, 0],
-                XYZ[:, :, 1],
-                c=Px.T,
-                transform=tx,
-                cmap=cmap,
-                vmax=p_max,
-                vmin=p_min,
-                s=0.5,
-                marker="s",
-                alpha=1.,
-                zorder=7,
-                **kwargs,
-            )
-            # im = self.pcolormesh(
+            # im = self.scatter(
             #     XYZ[:, :, 0],
             #     XYZ[:, :, 1],
-            #     Px.T,
-            #     vmax=p_max,
-            #     vmin=p_min,
+            #     c=Px.T,
             #     transform=tx,
             #     cmap=cmap,
-            #     zorder=2
+            #     vmax=p_max,
+            #     vmin=p_min,
+            #     s=0.1,
+            #     marker="s",
+            #     alpha=1.,
+            #     zorder=7,
+            #     **kwargs,
             # )
+            im = self.pcolormesh(
+                XYZ[:, :, 0],
+                XYZ[:, :, 1],
+                Px.T,
+                vmax=p_max,
+                vmin=p_min,
+                transform=tx,
+                cmap=cmap,
+                zorder=2
+            )
             if cbar:
                 self._add_colorbar(im, label=label)
         return
