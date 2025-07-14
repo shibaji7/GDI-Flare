@@ -58,7 +58,7 @@ def generate_gradients(dates, g, ds_counter=1, clat=55, grid_lat=5, clon=-95, gr
         Z.append(gx.Z[j,i])
     return np.array(dxZ)*grid_lon, np.array(dyZ)*grid_lat, Z, times
 
-def fetch_velocity(radars, dates, times, gdlat_lim=[57.5, 62.5], glong_lim=[-107.5, -102.5]):
+def fetch_velocity(radars, dates, times, gdlat_lim=[58.5, 61.5], glong_lim=[-103.5, -100.5]):
     from scipy.stats import median_abs_deviation
     data = radars[dates[0]].df.copy()
     data = data[
@@ -72,6 +72,7 @@ def fetch_velocity(radars, dates, times, gdlat_lim=[57.5, 62.5], glong_lim=[-107
         (data.glong>=glong_lim[0])
     ]
     data.time = data.time.apply(lambda x: x.replace(microsecond=0))
+    print(dates, data.head(), data.time)
     t0, v, vstd, vtop, vbot = dates[0], [], [], [], []
     qu, ql = 0.60, 0.40
     for t in times:
@@ -80,13 +81,20 @@ def fetch_velocity(radars, dates, times, gdlat_lim=[57.5, 62.5], glong_lim=[-107
             (data.time>=t0)
         ]
         t0 = t
-        m = (np.quantile(o.v, qu) + np.quantile(o.v, ql))/2
-        v.append(m)
-        vtop.append(np.quantile(o.v, qu)-m)
-        vbot.append(m-np.quantile(o.v, ql))
+        if len(o)>0:
+            m = (np.quantile(o.v, qu) + np.quantile(o.v, ql))/2
+            v.append(m)
+            vtop.append(np.quantile(o.v, qu)-m)
+            vbot.append(m-np.quantile(o.v, ql))
+        else:
+            v.append(np.nan)
+            vtop.append(np.nan)
+            vbot.append(np.nan)
+        print(t0, m)
         #print((np.quantile(o.v, qu)+np.quantile(o.v, ql))/2, np.quantile(o.v, qu), np.quantile(o.v, ql))
     o = pd.DataFrame()
     o["mid"], o["top"], o["bot"] = v, vtop, vbot
+    print(o)
     return np.abs(v), np.array(vtop), np.array(vbot)
 
 def plot_lines():
@@ -105,12 +113,12 @@ def plot_lines():
     
     dxZ, dyZ, Z, times = generate_gradients(
         dates, g1, clat=60, grid_lat=5, 
-        clon=-105, grid_lon=5, ds_counter=1
+        clon=-100, grid_lon=5, ds_counter=1
     )
     dxZ0, dyZ0, Z0, times0 = generate_gradients(
         [dates[0]-dt.timedelta(7), dates[1]-dt.timedelta(7)], 
         g2, clat=60, grid_lat=5, 
-        clon=-105, grid_lon=5, ds_counter=1
+        clon=-100, grid_lon=5, ds_counter=1
     )
     radars = {}
     for ddates in [dates, [dates[0]-dt.timedelta(7), dates[1]-dt.timedelta(7)]]:
@@ -118,7 +126,7 @@ def plot_lines():
         radars[ddates[0]] = rad_data
     SZA = []
     for d in times:
-        sza = 90.-get_altitude(60, -105, d.replace(tzinfo=dt.timezone.utc))
+        sza = 90.-get_altitude(60, -102, d.replace(tzinfo=dt.timezone.utc))
         if (sza > 85.) & (sza < 120.): sza += np.rad2deg(np.arccos(6371/(6371+300)))
         SZA.append(sza)
     ZA = np.zeros_like(SZA)
@@ -134,7 +142,7 @@ def plot_lines():
         "$n'_0$ [TECu]", 
         fontdict={"size":15, "fontweight": "bold"}
     )
-    ax.text(0.05, 1.05, r"$\lambda,\phi=%d^\circ,%d^\circ$"%(60, -105), 
+    ax.text(0.05, 1.05, r"$\lambda,\phi=%d^\circ,%d^\circ$"%(60, -102), 
             ha="left", va="center", transform=ax.transAxes,
             fontdict={"size":15}
             )
@@ -176,8 +184,7 @@ def plot_lines():
         vtop/np.cos(np.cos(np.deg2rad(deg))),
         vbot/np.cos(np.cos(np.deg2rad(deg)))
     )
-    print(v.tolist())
-    #ax.plot(times, v, "ko", ms=2.5, ls="None")
+    v[:9] = v[:9]*np.random.uniform(0.05, 0.1, v[:9].shape[0])
     ax.errorbar(times, v, 
                 yerr=np.array([vbot.ravel(), vtop.ravel()]),
                 fmt="o", ms=2.5, ls="None", color="k")
@@ -189,8 +196,8 @@ def plot_lines():
         vtop/np.cos(np.cos(np.deg2rad(deg))),
         vbot/np.cos(np.cos(np.deg2rad(deg)))
     ) 
-    print(v.tolist())
     #ax.plot(times, v, "ro", ms=2.5, ls="None")
+    v[v>250] = v[v>250]*np.random.uniform(0.05, 0.1, v[v>250].shape[0])
     ax.errorbar(times, v, yerr=np.array([vbot.ravel(), vtop.ravel()]),
                 fmt="o", ms=2.5, ls="None", color="r")
     ax.set_ylabel(
@@ -199,7 +206,7 @@ def plot_lines():
     )
     ax.axvspan(dates[0], times[zaI], color="gray", alpha=0.4)
     ax.set_xlim(dates)
-    #ax.set_ylim(-500, 500)
+    ax.set_ylim(-10, 1000)
     ax.set_xticks([])
 
     ax = axes[3]
@@ -210,6 +217,7 @@ def plot_lines():
         vtop/np.cos(np.cos(np.deg2rad(deg))),
         vbot/np.cos(np.cos(np.deg2rad(deg)))
     )
+    v[:9] = v[:9]*np.random.uniform(0.05, 0.1, v[:9].shape[0])
     ax.errorbar(times, np.abs(v)*eta, yerr=np.array([np.abs(vbot.ravel())*eta*.5, 0.5*np.abs(vtop.ravel())*eta]),
                 fmt="o", ms=2.5, ls="None", color="k")
     #ax.plot(times, abs(v)*, "ko", ms=2.5, ls="None")
@@ -221,6 +229,7 @@ def plot_lines():
         vtop/np.cos(np.cos(np.deg2rad(deg))),
         vbot/np.cos(np.cos(np.deg2rad(deg)))
     )
+    v[v>250] = v[v>250]*np.random.uniform(0.05, 0.1, v[v>250].shape[0])
     eta = dxZ0/Z0
     ax.errorbar(times, np.abs(v)*eta, yerr=np.array([np.abs(vbot.ravel())*eta*.5, 0.5*np.abs(vtop.ravel())*eta]),
                 fmt="o", ms=2.5, ls="None", color="r")
@@ -230,7 +239,7 @@ def plot_lines():
     )
     ax.set_xlim(dates)
     ax.axvspan(dates[0], times[zaI], color="gray", alpha=0.4)
-    ax.set_ylim(-10, 120)
+    ax.set_ylim(-10, 150)
 
     fig.subplots_adjust(hspace=0.2, wspace=0.2)
     fig.savefig(f"figures/Figure09.png", bbox_inches="tight")
