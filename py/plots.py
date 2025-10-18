@@ -170,6 +170,7 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     ax.axvline(dt.datetime(2017,9,6,12,2), color="k", ls="-", lw=1.2)
     ax.set_ylim(70, 400)
     ax.set_xlim(dt.datetime(2017,9,6,10), dt.datetime(2017,9,6,15))
+    ax.text(0.05, 0.95, "(a)", ha="left", va="center", transform=ax.transAxes, fontdict={"size": 12})
 
     ax = fig.add_subplot(312)
     ax.xaxis.set_major_formatter(DateFormatter(r"%H^{%M}"))
@@ -184,6 +185,7 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     ax.set_ylabel(r"$N_e(h)$, $\times 10^{9}$ $m^{-3}$")
     ax.legend(loc=1, shadow=True, fancybox=True, numpoints=3)
     ax.set_ylim(0, 200)
+    ax.text(0.05, 0.95, "(b)", ha="left", va="center", transform=ax.transAxes, fontdict={"size": 12})
 
     tau = 3
     dates = [
@@ -229,6 +231,7 @@ def create_eiscat_line_plot(eiscat, fname, size=10):
     ax.axvline(dt.datetime(2017,9,6,12,2), color="k", ls="-", lw=1.2)
     ax.legend(loc=1, shadow=True, fancybox=True, numpoints=3)
     ax.set_ylim(1, 30)
+    ax.text(0.05, 0.95, "(c)", ha="left", va="center", transform=ax.transAxes, fontdict={"size": 13})
 
     fig.subplots_adjust(hspace=0.2, wspace=0.2)
     fig.savefig(f"figures/{fname}", bbox_inches="tight")
